@@ -1,0 +1,13 @@
+{
+    "require": {
+        "symfony/console": "^4.1",
+        "aws/aws-sdk-php": "^3.64",
+        "phpseclib/phpseclib": "^2.0",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpEcs\\": "src/"
+        }
+    }
+}

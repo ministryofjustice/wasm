@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+use WpEcs\Command\Exec;
+use WpEcs\Command\Shell;
+
+$app = new Application();
+$app->addCommands([
+    new Exec(),
+    new Shell(),
+]);
+$app->run();
