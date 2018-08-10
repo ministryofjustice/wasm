@@ -13,5 +13,6 @@ $app->addCommands([
     new Exec(),
     new Shell(),
     new Db\Export(),
+    new Db\Import(),
 ]);
 $app->run();
