@@ -6,10 +6,12 @@ require __DIR__ . '/vendor/autoload.php';
 use Symfony\Component\Console\Application;
 use WpEcs\Command\Exec;
 use WpEcs\Command\Shell;
+use WpEcs\Command\Db;
 
 $app = new Application();
 $app->addCommands([
     new Exec(),
     new Shell(),
+    new Db\Export(),
 ]);
 $app->run();

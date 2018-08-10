@@ -10,12 +10,32 @@ use WpEcs\WordpressInstance\AwsResources;
  */
 class WordpressInstance
 {
+    /**
+     * The 'appname' of this WordPress instance
+     *
+     * @var string
+     */
     protected $appName;
 
+    /**
+     * The environment of this WordPress instance
+     *
+     * @var string
+     */
     protected $env;
 
+    /**
+     * Holds the AWS resources associated with this WordPress instance
+     * @var AwsResources
+     */
     public $Aws;
 
+    /**
+     * WordpressInstance constructor
+     *
+     * @param string $appName The name of the site, as defined by the stack's `AppName` parameter
+     * @param string $env The environment of the instance: dev|staging|prod
+     */
     public function __construct($appName, $env)
     {
         $this->appName = $appName;
@@ -54,6 +74,12 @@ class WordpressInstance
         return $ssh;
     }
 
+    /**
+     * Execute a command on the instance and return the output
+     *
+     * @param string $command
+     * @return string
+     */
     public function execute($command)
     {
         $process = new Process($this->prepareCommand($command));
