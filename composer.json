@@ -2,8 +2,8 @@
     "require": {
         "symfony/console": "^4.1",
         "aws/aws-sdk-php": "^3.64",
-        "phpseclib/phpseclib": "^2.0",
-        "ext-json": "*"
+        "ext-json": "*",
+        "symfony/process": "^4.1"
     },
     "autoload": {
         "psr-4": {

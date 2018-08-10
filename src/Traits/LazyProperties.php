@@ -1,6 +1,6 @@
 <?php
 
-namespace WpEcs;
+namespace WpEcs\Traits;
 
 /**
  * A trait to implement lazy-loaded property values.

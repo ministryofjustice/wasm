@@ -3,8 +3,8 @@
 namespace WpEcs;
 
 use Aws\Sdk;
-use phpseclib\Crypt\RSA;
-use phpseclib\Net\SSH2;
+use Symfony\Component\Process\Process;
+use WpEcs\Traits\LazyProperties;
 
 /**
  * Class WordpressInstance
@@ -26,8 +26,6 @@ class WordpressInstance
     protected $stackName;
 
     protected $sdk;
-
-    protected $ssh;
 
     public function __construct($appName, $env)
     {
@@ -101,33 +99,60 @@ class WordpressInstance
         return $ec2Hostname;
     }
 
-    protected function getSshConnection()
-    {
-        if (!isset($this->ssh)) {
-            $ssh = new SSH2($this->ec2Hostname);
-            $key = new RSA();
-            $key->loadKey(file_get_contents(getenv('SSH_KEY_FILE')));
-            $ssh->login('ec2-user', $key);
-            $this->ssh = $ssh;
-        }
-        return $this->ssh;
-    }
-
     public function getDockerContainerId()
     {
-        $hostTask = $this->getSshConnection()->exec("curl -s localhost:51678/v1/tasks?taskarn={$this->ecsTaskArn}");
+        $hostTask = (new Process([
+            'ssh',
+            "ec2-user@{$this->ec2Hostname}",
+            "curl -s localhost:51678/v1/tasks?taskarn={$this->ecsTaskArn}",
+        ]))->mustRun()->getOutput();
+
         $hostTask = json_decode($hostTask, true);
+
         foreach ($hostTask['Containers'] as $container) {
             if ($container['Name'] == 'web') {
                 return $container['DockerId'];
             }
         }
+
         throw new \Exception('Docker container not found on host');
+    }
+
+    /**
+     * Generate a `ssh` + `docker exec` command array suitable for using with Symfony's Process component.
+     * Optionally, you can specify arguments to pass to both the `ssh` and `docker exec` commands.
+     *
+     * @param string $command Command to execute on the container
+     * @param array $sshOptions Arguments to pass to the `ssh` command (optional)
+     * @param array $dockerOptions Arguments to pass to the `docker exec` command (optional)
+     * @return array
+     */
+    public function prepareCommand($command, $sshOptions = [], $dockerOptions = [])
+    {
+        $ssh = array_merge(
+            [
+                'ssh',
+                "ec2-user@{$this->ec2Hostname}",
+            ],
+            $sshOptions
+        );
+
+        $docker = array_merge(
+            ['docker exec'],
+            $dockerOptions,
+            [$this->dockerContainerId]
+        );
+
+        $ssh[] = implode(' ', $docker);
+        $ssh[] = $command;
+
+        return $ssh;
     }
 
     public function execute($command)
     {
-        $dockerId = $this->dockerContainerId;
-        return $this->getSshConnection()->exec("docker exec $dockerId $command");
+        $process = new Process($this->prepareCommand($command));
+        $process->mustRun();
+        return $process->getOutput();
     }
 }

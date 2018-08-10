@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
+use Symfony\Component\Process\Process;
 use WpEcs\WordpressInstance;
 
 
@@ -35,17 +36,20 @@ class Shell extends Command
             $input->getArgument('env')
         );
 
-        $term = new Terminal();
+        $terminal = new Terminal();
 
-        $command = sprintf(
-            'ssh ec2-user@%s -t "docker exec -ti -e COLUMNS=%d -e LINES=%d %s %s"',
-            $instance->ec2Hostname,
-            $term->getWidth(),
-            $term->getHeight(),
-            $instance->dockerContainerId,
-            $input->getArgument('shell')
+        $command = $instance->prepareCommand(
+            $input->getArgument('shell'),
+            ['-t'],
+            [
+                '-ti',
+                "-e COLUMNS={$terminal->getWidth()}",
+                "-e LINES={$terminal->getHeight()}",
+            ]
         );
 
-        passthru($command);
+        $process = new Process($command);
+        $process->setTty(true);
+        $process->mustRun();
     }
 }
