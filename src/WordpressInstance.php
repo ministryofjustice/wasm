@@ -2,6 +2,7 @@
 
 namespace WpEcs;
 
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use WpEcs\WordpressInstance\AwsResources;
 
@@ -85,5 +86,55 @@ class WordpressInstance
         $process = new Process($this->prepareCommand($command));
         $process->mustRun();
         return $process->getOutput();
+    }
+
+    /**
+     * Export the instance's database to the supplied file handle
+     *
+     * @param resource $fh An open file handle to export to
+     * @throws ProcessFailedException if the process didn't terminate successfully
+     */
+    public function exportDatabase($fh)
+    {
+        $command = 'wp --allow-root db export -';
+        $process = new Process($this->prepareCommand($command));
+
+        /**
+         * Callback to process Process output
+         *
+         * Output is saved to the open file handle ($fh) in chunks.
+         * Also notice that Process output capturing is disabled with $process->disableOutput();
+         *
+         * Together, this avoids the need to load the entire DB dump into an in-memory variable before writing it out to disk.
+         * Instead, the dump is written to disk as it arrives, and is never stored in memory.
+         *
+         * @param string $type
+         * @param string $buffer
+         */
+        $saveOutputStream = function($type, $buffer) use ($fh) {
+            if ($type === Process::OUT) {
+                fwrite($fh, $buffer);
+            }
+        };
+        $process->disableOutput();
+        $process->mustRun($saveOutputStream);
+    }
+
+    /**
+     * Import the supplied file handle into the instance's database
+     *
+     * @param resource $fh An open file handle to import from
+     * @throws ProcessFailedException if the process didn't terminate successfully
+     */
+    public function importDatabase($fh)
+    {
+        $command = $this->prepareCommand(
+            'wp --allow-root db import -',
+            [],
+            ['-i']
+        );
+        $process = new Process($command);
+        $process->setInput($fh);
+        $process->mustRun();
     }
 }

@@ -5,6 +5,7 @@ namespace WpEcs\Command\Db;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 use WpEcs\WordpressInstance;
@@ -28,17 +29,9 @@ class Import extends Command
             $input->getArgument('env')
         );
 
-        $command = $instance->prepareCommand(
-            'wp --allow-root db import -',
-            [],
-            ['-i']
-        );
-        $process = new Process($command);
-
         $fromFile = $input->getArgument('filename');
         $fh = fopen($fromFile, 'r');
-        $process->setInput($fh);
-        $process->mustRun();
+        $instance->importDatabase($fh);
         fclose($fh);
 
         $output->writeln("<info>Success:</info> Database imported from <comment>$fromFile</comment>");

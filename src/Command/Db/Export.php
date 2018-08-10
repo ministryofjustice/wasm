@@ -29,35 +29,9 @@ class Export extends Command
             $input->getArgument('env')
         );
 
-        $command = 'wp --allow-root db export -';
-        $process = new Process($instance->prepareCommand($command));
-
-        $errout = $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output;
-
         $toFile = $this->getFilename($input);
         $fh = fopen($toFile, 'w');
-
-        /**
-         * Callback to process Process output
-         *
-         * Output is saved to the open file handle ($fh) in chunks.
-         * Also notice that Process output capturing is disabled with $process->disableOutput();
-         *
-         * Together, this avoids the need to load the entire DB dump into an in-memory variable before writing it out to disk.
-         * Instead, the dump is written to disk as it arrives, and is never stored in memory.
-         *
-         * @param string $type
-         * @param string $buffer
-         */
-        $saveOutputStream = function($type, $buffer) use ($fh, $errout) {
-            if ($type === Process::ERR) {
-                $errout->writeln($buffer);
-            } else {
-                fwrite($fh, $buffer);
-            }
-        };
-        $process->disableOutput();
-        $process->mustRun($saveOutputStream);
+        $instance->exportDatabase($fh);
         fclose($fh);
 
         $output->writeln("<info>Success:</info> Database exported to <comment>$toFile</comment>");
