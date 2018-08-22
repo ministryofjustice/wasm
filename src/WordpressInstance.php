@@ -137,4 +137,16 @@ class WordpressInstance
         $process->setInput($fh);
         $process->mustRun();
     }
+
+    /**
+     * Get the value of an environment variable in the container
+     *
+     * @param string $var Name of the environment variable
+     * @return string Value of the environment variable
+     */
+    public function env($var)
+    {
+        $value = $this->execute("printenv $var");
+        return trim($value);
+    }
 }

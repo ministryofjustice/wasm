@@ -7,6 +7,7 @@ use Symfony\Component\Console\Application;
 use WpEcs\Command\Exec;
 use WpEcs\Command\Shell;
 use WpEcs\Command\Db;
+use WpEcs\Command\Migrate;
 
 $app = new Application();
 $app->addCommands([
@@ -14,5 +15,6 @@ $app->addCommands([
     new Shell(),
     new Db\Export(),
     new Db\Import(),
+    new Migrate(),
 ]);
 $app->run();
