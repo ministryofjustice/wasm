@@ -24,17 +24,16 @@ class Migrate extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $from = new WordpressInstance(
-            $input->getArgument('app'),
-            $input->getArgument('from')
-        );
+        $app = $input->getArgument('app');
+        $fromEnv = $input->getArgument('from');
+        $toEnv = $input->getArgument('to');
 
-        $to = new WordpressInstance(
-            $input->getArgument('app'),
-            $input->getArgument('to')
-        );
+        $from = new WordpressInstance($app, $fromEnv);
+        $to = new WordpressInstance($app, $toEnv);
 
-        $migration = new Migration($from, $to);
+        $migration = new Migration($from, $to, $output);
         $migration->migrate();
+
+        $output->writeln("<info>Success:</info> Migrated <comment>$app</comment> from <comment>$fromEnv</comment> to <comment>$toEnv</comment>");
     }
 }

@@ -17,6 +17,7 @@ use WpEcs\Traits\LazyProperties;
  * @property-read string ecsTaskArn
  * @property-read string ec2Hostname
  * @property-read string dockerContainerId
+ * @property-read string s3BucketName
  */
 class AwsResources
 {
@@ -121,5 +122,17 @@ class AwsResources
         }
 
         throw new \Exception('Docker container not found on host');
+    }
+
+    protected function getS3BucketName()
+    {
+        $cloudformation = $this->sdk->createCloudFormation();
+
+        $resource = $cloudformation->describeStackResource([
+            'StackName' => $this->stackName,
+            'LogicalResourceId' => 'Storage',
+        ]);
+
+        return $resource['StackResourceDetail']['PhysicalResourceId'];
     }
 }
