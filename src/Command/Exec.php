@@ -6,7 +6,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use WpEcs\WordpressInstance;
+use WpEcs\Wordpress\AwsInstance;
 
 class Exec extends Command
 {
@@ -22,7 +22,7 @@ class Exec extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = new WordpressInstance(
+        $instance = new AwsInstance(
             $input->getArgument('app'),
             $input->getArgument('env')
         );

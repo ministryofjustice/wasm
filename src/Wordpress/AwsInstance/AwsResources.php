@@ -1,15 +1,15 @@
 <?php
 
-namespace WpEcs\WordpressInstance;
+namespace WpEcs\Wordpress\AwsInstance;
 
 use Aws\Sdk;
 use Symfony\Component\Process\Process;
-use WpEcs\Traits\LazyProperties;
+use WpEcs\Traits\LazyPropertiesTrait;
 
 /**
  * Class AwsResources
  *
- * This class represents the AWS Resources associated with a WordPress Instance.
+ * This class represents the AWS Resources associated with a WordPress instance running in AWS
  *
  * @property-read string stackName
  * @property-read string ecsCluster
@@ -21,7 +21,7 @@ use WpEcs\Traits\LazyProperties;
  */
 class AwsResources
 {
-    use LazyProperties;
+    use LazyPropertiesTrait;
 
     protected $appName;
 

@@ -5,21 +5,21 @@ namespace WpEcs\Service;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
 use Symfony\Component\Process\Process;
-use WpEcs\WordpressInstance;
+use WpEcs\Wordpress\AbstractInstance;
 
 class Migration
 {
     /**
      * The source WordPress instance
      *
-     * @var WordpressInstance
+     * @var AbstractInstance
      */
     protected $source;
 
     /**
      * The destination WordPress instance
      *
-     * @var WordpressInstance
+     * @var AbstractInstance
      */
     protected $dest;
 
@@ -31,10 +31,10 @@ class Migration
     /**
      * Migration constructor.
      *
-     * @param WordpressInstance $from
-     * @param WordpressInstance $to
+     * @param AbstractInstance $from
+     * @param AbstractInstance $to
      */
-    public function __construct(WordpressInstance $from, WordpressInstance $to, OutputInterface $output)
+    public function __construct(AbstractInstance $from, AbstractInstance $to, OutputInterface $output)
     {
         $this->source = $from;
         $this->dest   = $to;

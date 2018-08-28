@@ -2,12 +2,11 @@
 
 namespace WpEcs\Command;
 
-
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use WpEcs\WordpressInstance;
+use WpEcs\Wordpress\AwsInstance;
 use WpEcs\Service\Migration;
 
 class Migrate extends Command
@@ -28,8 +27,8 @@ class Migrate extends Command
         $fromEnv = $input->getArgument('from');
         $toEnv = $input->getArgument('to');
 
-        $from = new WordpressInstance($app, $fromEnv);
-        $to = new WordpressInstance($app, $toEnv);
+        $from = new AwsInstance($app, $fromEnv);
+        $to = new AwsInstance($app, $toEnv);
 
         $migration = new Migration($from, $to, $output);
         $migration->migrate();

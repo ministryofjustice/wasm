@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ollietreend
- * Date: 08/08/2018
- * Time: 11:47
- */
 
 namespace WpEcs\Command;
 
@@ -13,9 +7,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
-use Symfony\Component\Process\Process;
-use WpEcs\WordpressInstance;
-
+use WpEcs\Wordpress\AwsInstance;
 
 class Shell extends Command
 {
@@ -31,24 +23,22 @@ class Shell extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = new WordpressInstance(
+        $instance = new AwsInstance(
             $input->getArgument('app'),
             $input->getArgument('env')
         );
 
         $terminal = new Terminal();
 
-        $command = $instance->prepareCommand(
+        $process = $instance->newCommand(
             $input->getArgument('shell'),
-            ['-t'],
             [
                 '-ti',
                 "-e COLUMNS={$terminal->getWidth()}",
                 "-e LINES={$terminal->getHeight()}",
-            ]
+            ],
+            ['-t']
         );
-
-        $process = new Process($command);
         $process->setTty(true);
         $process->mustRun();
     }

@@ -6,7 +6,7 @@ namespace WpEcs\Traits;
  * A trait to implement lazy-loaded property values.
  * Use this to cache property values which are expensive to calculate and do not change.
  */
-trait LazyProperties
+trait LazyPropertiesTrait
 {
     /**
      * In-memory store for cached property values
