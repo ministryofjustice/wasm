@@ -28,7 +28,7 @@ class Import extends Command
         );
 
         $fromFile = $input->getArgument('filename');
-        $fh = fopen($fromFile, 'r');
+        $fh       = fopen($fromFile, 'r');
         $instance->importDatabase($fh);
         fclose($fh);
 

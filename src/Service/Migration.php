@@ -10,13 +10,6 @@ use WpEcs\Wordpress\AbstractInstance;
 class Migration
 {
     /**
-     * The source WordPress instance
-     *
-     * @var AbstractInstance
-     */
-    protected $source;
-
-    /**
      * The destination WordPress instance
      *
      * @var AbstractInstance
@@ -27,6 +20,13 @@ class Migration
      * @var OutputInterface
      */
     protected $output;
+
+    /**
+     * The source WordPress instance
+     *
+     * @var AbstractInstance
+     */
+    protected $source;
 
     /**
      * Migration constructor.
@@ -64,17 +64,18 @@ class Migration
     {
         if ($this->output->getVerbosity() == OutputInterface::VERBOSITY_NORMAL) {
             $this->output->writeln($name);
-        }
-        else {
+        } else {
             $this->verboseSeparator();
             $this->output->writeln('<comment>' . strtoupper($name) . '</comment>');
             $this->verboseSeparator();
         }
     }
 
-    protected function endStep()
+    protected function verboseSeparator()
     {
-        $this->output->writeln('', OutputInterface::VERBOSITY_VERBOSE);
+        $width = (new Terminal())->getWidth();
+        $str   = str_repeat('-', $width);
+        $this->output->writeln($str, OutputInterface::VERBOSITY_VERBOSE);
     }
 
     protected function moveDatabase()
@@ -88,49 +89,49 @@ class Migration
         fclose($fh);
     }
 
-    protected function rewriteHostname()
+    protected function endStep()
     {
-        $source = $this->source->env('SERVER_NAME');
-        $destination   = $this->dest->env('SERVER_NAME');
-        $this->dbSearchReplace($source, $destination);
+        $this->output->writeln('', OutputInterface::VERBOSITY_VERBOSE);
     }
 
-    protected function rewriteS3BucketUrl()
+    protected function rewriteHostname()
     {
-        $source = $this->source->env('S3_UPLOADS_BASE_URL');
-        $destination   = $this->dest->env('S3_UPLOADS_BASE_URL');
+        $source      = $this->source->env('SERVER_NAME');
+        $destination = $this->dest->env('SERVER_NAME');
         $this->dbSearchReplace($source, $destination);
     }
 
     protected function dbSearchReplace($search, $replace)
     {
         $command = "wp --allow-root search-replace --report-changed-only \"$search\" \"$replace\"";
-        $this->output->writeln("Running command on destination instance: <comment>$command</comment>\n", OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->writeln("Running command on destination instance: <comment>$command</comment>\n",
+            OutputInterface::VERBOSITY_VERBOSE);
         $result = $this->dest->execute($command);
-        $this->output->write($result, false,OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->write($result, false, OutputInterface::VERBOSITY_VERBOSE);
+    }
+
+    protected function rewriteS3BucketUrl()
+    {
+        $source      = $this->source->env('S3_UPLOADS_BASE_URL');
+        $destination = $this->dest->env('S3_UPLOADS_BASE_URL');
+        $this->dbSearchReplace($source, $destination);
     }
 
     protected function syncS3Bucket()
     {
         $source = $this->source->Aws->s3BucketName;
-        $dest = $this->dest->Aws->s3BucketName;
+        $dest   = $this->dest->Aws->s3BucketName;
 
         $command = "aws s3 sync --delete s3://$source s3://$dest";
         $process = new Process($command);
 
-        $this->output->writeln("Running command locally: <comment>$command</comment>\n", OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->writeln("Running command locally: <comment>$command</comment>\n",
+            OutputInterface::VERBOSITY_VERBOSE);
 
-        $streamOutput = function($type, $buffer) {
+        $streamOutput = function ($type, $buffer) {
             $this->output->write($buffer, false, OutputInterface::VERBOSITY_VERBOSE);
         };
         $process->disableOutput();
         $process->mustRun($streamOutput);
-    }
-
-    protected function verboseSeparator()
-    {
-        $width = (new Terminal())->getWidth();
-        $str = str_repeat('-', $width);
-        $this->output->writeln($str, OutputInterface::VERBOSITY_VERBOSE);
     }
 }

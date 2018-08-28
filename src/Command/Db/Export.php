@@ -28,7 +28,7 @@ class Export extends Command
         );
 
         $toFile = $this->getFilename($input);
-        $fh = fopen($toFile, 'w');
+        $fh     = fopen($toFile, 'w');
         $instance->exportDatabase($fh);
         fclose($fh);
 

@@ -25,6 +25,7 @@ trait LazyPropertiesTrait
      *        and cache the return value
      *
      * @param string $field
+     *
      * @return mixed
      */
     public function __get($field)
@@ -34,6 +35,7 @@ trait LazyPropertiesTrait
             if (!isset($this->cache[$field])) {
                 $this->cache[$field] = call_user_func([$this, $getMethod]);
             }
+
             return $this->cache[$field];
         }
     }

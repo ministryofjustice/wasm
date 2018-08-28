@@ -35,11 +35,26 @@ class LocalInstance extends AbstractInstance
         $this->workingDirectory = $workingDirectory;
     }
 
+    /**
+     * Get the ID of the running docker container for this WordPress instance
+     *
+     * @return string
+     */
+    protected function getDockerContainerId()
+    {
+        $process = new Process('docker-compose ps -q wordpress');
+        $process->setWorkingDirectory($this->workingDirectory);
+        $id = $process->mustRun()->getOutput();
+
+        return trim($id);
+    }
+
     public function newCommand($command, $dockerOptions = [], ...$options)
     {
         $command = $this->prepareCommand($command, $dockerOptions);
         $process = new Process($command);
         $process->setWorkingDirectory($this->workingDirectory);
+
         return $process;
     }
 
@@ -49,6 +64,7 @@ class LocalInstance extends AbstractInstance
      *
      * @param string $command Command to execute on the container
      * @param array $dockerOptions Arguments to pass to the `docker exec` command (optional)
+     *
      * @return array
      */
     protected function prepareCommand($command, $dockerOptions = [])
@@ -66,18 +82,5 @@ class LocalInstance extends AbstractInstance
             ],
             $command
         );
-    }
-
-    /**
-     * Get the ID of the running docker container for this WordPress instance
-     *
-     * @return string
-     */
-    protected function getDockerContainerId()
-    {
-        $process = new Process('docker-compose ps -q wordpress');
-        $process->setWorkingDirectory($this->workingDirectory);
-        $id = $process->mustRun()->getOutput();
-        return trim($id);
     }
 }

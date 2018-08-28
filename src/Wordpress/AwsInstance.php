@@ -35,6 +35,7 @@ class AwsInstance extends AbstractInstance
 
         $command = $this->prepareCommand($command, $dockerOptions, $sshOptions);
         $process = new Process($command);
+
         return $process;
     }
 
@@ -45,6 +46,7 @@ class AwsInstance extends AbstractInstance
      * @param string $command Command to execute on the container
      * @param array $dockerOptions Arguments to pass to the `docker exec` command (optional)
      * @param array $sshOptions Arguments to pass to the `ssh` command (optional)
+     *
      * @return array
      */
     protected function prepareCommand($command, $dockerOptions = [], $sshOptions = [])

@@ -23,12 +23,12 @@ class Migrate extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $app = $input->getArgument('app');
+        $app     = $input->getArgument('app');
         $fromEnv = $input->getArgument('from');
-        $toEnv = $input->getArgument('to');
+        $toEnv   = $input->getArgument('to');
 
         $from = new AwsInstance($app, $fromEnv);
-        $to = new AwsInstance($app, $toEnv);
+        $to   = new AwsInstance($app, $toEnv);
 
         $migration = new Migration($from, $to, $output);
         $migration->migrate();
