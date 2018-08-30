@@ -22,8 +22,18 @@ class AwsInstance extends AbstractInstance
      */
     public function __construct($appName, $env)
     {
-        $this->Aws = new AwsResources($appName, $env);
+        $this->Aws  = new AwsResources($appName, $env);
         $this->name = "$appName-$env";
+    }
+
+    protected function getUploadsBaseUrl()
+    {
+        return $this->env('S3_UPLOADS_BASE_URL');
+    }
+
+    protected function getUploadsPath()
+    {
+        return "s3://{$this->Aws->s3BucketName}/uploads";
     }
 
     public function newCommand($command, $dockerOptions = [], ...$options)
@@ -38,16 +48,6 @@ class AwsInstance extends AbstractInstance
         $process = new Process($command);
 
         return $process;
-    }
-
-    protected function getUploadsBaseUrl()
-    {
-        return $this->env('S3_UPLOADS_BASE_URL');
-    }
-
-    protected function getUploadsPath()
-    {
-        return "s3://{$this->Aws->s3BucketName}/uploads";
     }
 
     /**

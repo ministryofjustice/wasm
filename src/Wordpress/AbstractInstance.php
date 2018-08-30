@@ -17,6 +17,13 @@ abstract class AbstractInstance
     use LazyPropertiesTrait;
 
     /**
+     * Holds a cache of env variables
+     *
+     * @var array
+     */
+    protected $envCache = [];
+    
+    /**
      * A filename-friendly way to identify the instance
      * Does not need to be a valid Instance Identifier
      * e.g. 'mysite-dev' is fine
@@ -24,13 +31,6 @@ abstract class AbstractInstance
      * @var string
      */
     public $name;
-
-    /**
-     * Holds a cache of env variables
-     *
-     * @var array
-     */
-    protected $envCache = [];
 
     /**
      * Get the value of an environment variable in the container
@@ -42,8 +42,8 @@ abstract class AbstractInstance
      */
     public function env($var)
     {
-        if (!isset($this->envCache[$var])) {
-            $value = $this->execute("printenv $var");
+        if ( ! isset($this->envCache[$var])) {
+            $value                = $this->execute("printenv $var");
             $this->envCache[$var] = trim($value);
         }
 

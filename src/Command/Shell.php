@@ -16,7 +16,8 @@ class Shell extends Command
         $this
             ->setName('shell')
             ->setDescription('Opens an interactive shell on a running WordPress instance')
-            ->addArgument('instance', InputArgument::REQUIRED, 'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
+            ->addArgument('instance', InputArgument::REQUIRED,
+                'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
             ->addArgument('shell', InputArgument::OPTIONAL, 'The shell to execute', 'bash');
     }
 

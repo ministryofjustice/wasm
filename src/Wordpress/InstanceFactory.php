@@ -7,6 +7,24 @@ use Symfony\Component\Console\Exception\InvalidArgumentException;
 class InstanceFactory
 {
     /**
+     * The same as self::create() method, however if the $identifier is invalid it will throw an InvalidArgumentException.
+     * Therefore, this method should be used when the $identifier has been supplied as a console input argument.
+     *
+     * @param string $identifier
+     *
+     * @return AbstractInstance
+     * @throws InvalidArgumentException
+     */
+    public static function createFromInput($identifier)
+    {
+        try {
+            return self::create($identifier);
+        } catch (\Exception $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        }
+    }
+
+    /**
      * Create a WordPress instance object
      * Depending on the $identifier provided, this will either be an AwsInstance or a LocalInstance
      *
@@ -33,24 +51,6 @@ class InstanceFactory
     }
 
     /**
-     * The same as self::create() method, however if the $identifier is invalid it will throw an InvalidArgumentException.
-     * Therefore, this method should be used when the $identifier has been supplied as a console input argument.
-     *
-     * @param string $identifier
-     *
-     * @return AbstractInstance
-     * @throws InvalidArgumentException
-     */
-    public static function createFromInput($identifier)
-    {
-        try {
-            return self::create($identifier);
-        } catch (\Exception $e) {
-            throw new InvalidArgumentException($e->getMessage());
-        }
-    }
-
-    /**
      * Check if the $identifier is for an AWS instance
      * If it is, return its component parts ('appName' and 'env') for instantiating an AwsInstance object
      * Else return false
@@ -64,7 +64,7 @@ class InstanceFactory
         if (preg_match('/^([a-z-]+):(dev|staging|prod)$/', $identifier, $matches)) {
             return [
                 'appName' => $matches[1],
-                'env' => $matches[2],
+                'env'     => $matches[2],
             ];
         }
 

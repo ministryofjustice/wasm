@@ -73,7 +73,7 @@ class Migration
             $this->output->writeln($name);
         } else {
             $terminalWidth = (new Terminal())->getWidth();
-            $separator = str_repeat('-', $terminalWidth);
+            $separator     = str_repeat('-', $terminalWidth);
 
             $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
             $this->output->writeln('<comment>' . strtoupper($name) . '</comment>', OutputInterface::VERBOSITY_VERBOSE);
@@ -137,6 +137,29 @@ class Migration
     }
 
     /**
+     * Perform a search & replace operation on the `destination` database
+     *
+     * @param string $search
+     * @param string $replace
+     */
+    protected function dbSearchReplace($search, $replace)
+    {
+        $command = [
+            'wp',
+            '--allow-root',
+            'search-replace',
+            '--report-changed-only',
+            $search,
+            $replace,
+        ];
+
+        $this->output->writeln("Search for <comment>\"$search\"</comment> & replace with <comment>\"$replace\"</comment>",
+            OutputInterface::VERBOSITY_VERBOSE);
+        $result = $this->dest->execute($command);
+        $this->output->writeln($result, OutputInterface::VERBOSITY_VERBOSE);
+    }
+
+    /**
      * Search & replace the DB for an environment variable
      * Given the name of an environment variable, replace the value from `source` with the value in `destination`
      *
@@ -155,28 +178,6 @@ class Migration
     }
 
     /**
-     * Perform a search & replace operation on the `destination` database
-     *
-     * @param string $search
-     * @param string $replace
-     */
-    protected function dbSearchReplace($search, $replace)
-    {
-        $command = [
-            'wp',
-            '--allow-root',
-            'search-replace',
-            '--report-changed-only',
-            $search,
-            $replace,
-        ];
-
-        $this->output->writeln("Search for <comment>\"$search\"</comment> & replace with <comment>\"$replace\"</comment>", OutputInterface::VERBOSITY_VERBOSE);
-        $result = $this->dest->execute($command);
-        $this->output->writeln($result, OutputInterface::VERBOSITY_VERBOSE);
-    }
-
-    /**
      * Sync media upload files from `source` to `destination`
      * If the migration is to sync two local instances, it'll use `rsync`
      * Otherwise `aws s3 sync` will be used to sync to/from an S3 bucket
@@ -184,8 +185,9 @@ class Migration
     protected function syncUploads()
     {
         $from = $this->source->uploadsPath;
-        $to = $this->dest->uploadsPath;
-        $this->output->writeln("Syncing files from <comment>$from</comment> to <comment>$to</comment>", OutputInterface::VERBOSITY_VERBOSE);
+        $to   = $this->dest->uploadsPath;
+        $this->output->writeln("Syncing files from <comment>$from</comment> to <comment>$to</comment>",
+            OutputInterface::VERBOSITY_VERBOSE);
 
         if ($this->source instanceof LocalInstance && $this->dest instanceof LocalInstance) {
             // Sync files using `rsync` since both media directories are local

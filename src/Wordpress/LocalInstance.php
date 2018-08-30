@@ -33,7 +33,7 @@ class LocalInstance extends AbstractInstance
         }
 
         $this->workingDirectory = $workingDirectory;
-        $this->name = basename($workingDirectory);
+        $this->name             = basename($workingDirectory);
     }
 
     /**
@@ -53,13 +53,15 @@ class LocalInstance extends AbstractInstance
     protected function getUploadsBaseUrl()
     {
         $homeUrl = $this->env('WP_HOME');
+
         return $homeUrl . '/app/uploads';
     }
 
     protected function getUploadsPath()
     {
         $directory = 'web/app/uploads';
-        $path = $this->workingDirectory . DIRECTORY_SEPARATOR . $directory;
+        $path      = $this->workingDirectory . DIRECTORY_SEPARATOR . $directory;
+
         return realpath($path);
     }
 
