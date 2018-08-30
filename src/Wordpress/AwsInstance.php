@@ -39,6 +39,16 @@ class AwsInstance extends AbstractInstance
         return $process;
     }
 
+    protected function getUploadsBaseUrl()
+    {
+        return $this->env('S3_UPLOADS_BASE_URL');
+    }
+
+    protected function getUploadsPath()
+    {
+        return "s3://{$this->Aws->s3BucketName}/uploads";
+    }
+
     /**
      * Generate a `ssh` + `docker exec` command array suitable for using with Symfony's Process component.
      * Optionally, you can specify arguments to pass to both the `ssh` and `docker exec` commands.
@@ -51,23 +61,31 @@ class AwsInstance extends AbstractInstance
      */
     protected function prepareCommand($command, $dockerOptions = [], $sshOptions = [])
     {
-        $ssh = array_merge(
+        // Split command string into array of arguments
+        if (is_string($command)) {
+            $command = str_getcsv($command, ' ');
+        }
+
+        // Wrap all command arguments in single quotes so they pass-through to docker container unharmed (e.g. spaces intact)
+        $command = array_map(function($item) {
+            return "'$item'";
+        }, $command);
+
+        return array_merge(
             [
                 'ssh',
                 "ec2-user@{$this->Aws->ec2Hostname}",
             ],
-            $sshOptions
-        );
-
-        $docker = array_merge(
-            ['docker exec'],
+            $sshOptions,
+            [
+                'docker',
+                'exec',
+            ],
             $dockerOptions,
-            [$this->Aws->dockerContainerId]
+            [
+                $this->Aws->dockerContainerId,
+            ],
+            $command
         );
-
-        $ssh[] = implode(' ', $docker);
-        $ssh[] = $command;
-
-        return $ssh;
     }
 }

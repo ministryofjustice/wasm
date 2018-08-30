@@ -3,11 +3,12 @@
 namespace WpEcs\Command;
 
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use WpEcs\Wordpress\AwsInstance;
 use WpEcs\Service\Migration;
+use WpEcs\Wordpress\InstanceFactory;
 
 class Migrate extends Command
 {
@@ -16,23 +17,32 @@ class Migrate extends Command
         $this
             ->setName('migrate')
             ->setDescription('Migrate a WordPress instance between environments')
-            ->addArgument('app', InputArgument::REQUIRED, 'Name of the application')
-            ->addArgument('from', InputArgument::REQUIRED, 'Source environment')
-            ->addArgument('to', InputArgument::REQUIRED, 'Destination environment');
+            ->addArgument('from', InputArgument::REQUIRED, 'Source instance identifier')
+            ->addArgument('to', InputArgument::REQUIRED, 'Destination instance identifier');
+    }
+
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        $from = $input->getArgument('from');
+        $to = $input->getArgument('to');
+
+        if ($from == $to) {
+            throw new InvalidArgumentException('"from" and "to" arguments cannot be the same');
+        }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $app     = $input->getArgument('app');
-        $fromEnv = $input->getArgument('from');
-        $toEnv   = $input->getArgument('to');
+        $from = $input->getArgument('from');
+        $to = $input->getArgument('to');
 
-        $from = new AwsInstance($app, $fromEnv);
-        $to   = new AwsInstance($app, $toEnv);
-
-        $migration = new Migration($from, $to, $output);
+        $migration = new Migration(
+            InstanceFactory::create($from),
+            InstanceFactory::create($to),
+            $output
+        );
         $migration->migrate();
 
-        $output->writeln("<info>Success:</info> Migrated <comment>$app</comment> from <comment>$fromEnv</comment> to <comment>$toEnv</comment>");
+        $output->writeln("<info>Success:</info> Migrated <comment>$from</comment> to <comment>$to</comment>");
     }
 }

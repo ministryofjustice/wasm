@@ -49,6 +49,19 @@ class LocalInstance extends AbstractInstance
         return trim($id);
     }
 
+    protected function getUploadsBaseUrl()
+    {
+        $homeUrl = $this->env('WP_HOME');
+        return $homeUrl . '/app/uploads';
+    }
+
+    protected function getUploadsPath()
+    {
+        $directory = 'web/app/uploads';
+        $path = $this->workingDirectory . DIRECTORY_SEPARATOR . $directory;
+        return realpath($path);
+    }
+
     public function newCommand($command, $dockerOptions = [], ...$options)
     {
         $command = $this->prepareCommand($command, $dockerOptions);
@@ -69,7 +82,9 @@ class LocalInstance extends AbstractInstance
      */
     protected function prepareCommand($command, $dockerOptions = [])
     {
-        $command = explode(' ', $command);
+        if (is_string($command)) {
+            $command = str_getcsv($command, ' ');
+        }
 
         return array_merge(
             [

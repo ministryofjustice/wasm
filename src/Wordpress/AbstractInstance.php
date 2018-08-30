@@ -4,11 +4,28 @@ namespace WpEcs\Wordpress;
 
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
+use WpEcs\Traits\LazyPropertiesTrait;
 
+/**
+ * Class AbstractInstance
+ *
+ * @property-read string $uploadsBaseUrl
+ * @property-read string $uploadsPath
+ */
 abstract class AbstractInstance
 {
+    use LazyPropertiesTrait;
+
+    /**
+     * Holds a cache of env variables
+     *
+     * @var array
+     */
+    protected $envCache = [];
+
     /**
      * Get the value of an environment variable in the container
+     * Values are cached for the life of the object to avoid repeat calls to the container for env variables
      *
      * @param string $var Name of the environment variable
      *
@@ -16,15 +33,18 @@ abstract class AbstractInstance
      */
     public function env($var)
     {
-        $value = $this->execute("printenv $var");
+        if (!isset($this->envCache[$var])) {
+            $value = $this->execute("printenv $var");
+            $this->envCache[$var] = trim($value);
+        }
 
-        return trim($value);
+        return $this->envCache[$var];
     }
 
     /**
      * Execute a command on the instance and return the output
      *
-     * @param string $command
+     * @param string|array $command
      *
      * @return string
      * @throws ProcessFailedException if the process didn't exit successfully
