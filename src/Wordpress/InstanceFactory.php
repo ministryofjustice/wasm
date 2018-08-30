@@ -2,6 +2,8 @@
 
 namespace WpEcs\Wordpress;
 
+use Symfony\Component\Console\Exception\InvalidArgumentException;
+
 class InstanceFactory
 {
     /**
@@ -23,16 +25,29 @@ class InstanceFactory
             return new LocalInstance($path);
         } else {
             // Could not recognise this a valid instance identifier
-            throw new \Exception("Invalid identifier \"$identifier\"");
+            $message = "Instance identifier \"$identifier\" is not valid\n";
+            $message .= 'It must be in the format "<appname>:<env>" (e.g. "sitename:dev") for an AWS instance,' . "\n";
+            $message .= 'or the path to a local instance directory (which must contain a docker-compose.yml file).';
+            throw new \Exception($message);
         }
     }
 
-    public static function validateIdentifier($identifier)
+    /**
+     * The same as self::create() method, however if the $identifier is invalid it will throw an InvalidArgumentException.
+     * Therefore, this method should be used when the $identifier has been supplied as a console input argument.
+     *
+     * @param string $identifier
+     *
+     * @return AbstractInstance
+     * @throws InvalidArgumentException
+     */
+    public static function createFromInput($identifier)
     {
-        return (
-            self::awsIdentifier($identifier) !== false ||
-            self::localIdentifier($identifier) !== false
-        );
+        try {
+            return self::create($identifier);
+        } catch (\Exception $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        }
     }
 
     /**

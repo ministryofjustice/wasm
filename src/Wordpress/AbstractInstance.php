@@ -17,6 +17,15 @@ abstract class AbstractInstance
     use LazyPropertiesTrait;
 
     /**
+     * A filename-friendly way to identify the instance
+     * Does not need to be a valid Instance Identifier
+     * e.g. 'mysite-dev' is fine
+     *
+     * @var string
+     */
+    public $name;
+
+    /**
      * Holds a cache of env variables
      *
      * @var array

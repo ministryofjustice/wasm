@@ -24,7 +24,7 @@ class LocalInstance extends AbstractInstance
     /**
      * LocalInstance constructor.
      *
-     * @param string $workingDirectory
+     * @param string $workingDirectory Absolute path to the instance directory (optional)
      */
     public function __construct($workingDirectory = null)
     {
@@ -33,6 +33,7 @@ class LocalInstance extends AbstractInstance
         }
 
         $this->workingDirectory = $workingDirectory;
+        $this->name = basename($workingDirectory);
     }
 
     /**

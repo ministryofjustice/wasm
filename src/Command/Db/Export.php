@@ -6,7 +6,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use WpEcs\Wordpress\AwsInstance;
+use WpEcs\Wordpress\AbstractInstance;
+use WpEcs\Wordpress\InstanceFactory;
 
 class Export extends Command
 {
@@ -15,19 +16,17 @@ class Export extends Command
         $this
             ->setName('db:export')
             ->setDescription('Export the database of a running WordPress instance')
-            ->addArgument('app', InputArgument::REQUIRED, 'Name of the application')
-            ->addArgument('env', InputArgument::REQUIRED, 'Environment to run in')
-            ->addArgument('filename', InputArgument::OPTIONAL, 'The filename to save to');
+            ->addArgument('instance', InputArgument::REQUIRED, 'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
+            ->addArgument('filename', InputArgument::OPTIONAL, 'The file path to save to');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = new AwsInstance(
-            $input->getArgument('app'),
-            $input->getArgument('env')
+        $instance = InstanceFactory::createFromInput(
+            $input->getArgument('instance')
         );
 
-        $toFile = $this->getFilename($input);
+        $toFile = $this->getFilename($input, $instance);
         $fh     = fopen($toFile, 'w');
         $instance->exportDatabase($fh);
         fclose($fh);
@@ -35,15 +34,14 @@ class Export extends Command
         $output->writeln("<info>Success:</info> Database exported to <comment>$toFile</comment>");
     }
 
-    protected function getFilename(InputInterface $input)
+    protected function getFilename(InputInterface $input, AbstractInstance $instance)
     {
         $filename = $input->getArgument('filename');
 
         if (is_null($filename)) {
             $filename = sprintf(
-                '%s-%s-%s.sql',
-                $input->getArgument('app'),
-                $input->getArgument('env'),
+                '%s-%s.sql',
+                $instance->name,
                 date('Y-m-d-His')
             );
         }

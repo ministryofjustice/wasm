@@ -6,7 +6,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use WpEcs\Wordpress\AwsInstance;
+use WpEcs\Wordpress\InstanceFactory;
 
 class Exec extends Command
 {
@@ -15,16 +15,14 @@ class Exec extends Command
         $this
             ->setName('exec')
             ->setDescription('Executes a command on a running WordPress instance')
-            ->addArgument('app', InputArgument::REQUIRED, 'Name of the application')
-            ->addArgument('env', InputArgument::REQUIRED, 'Environment to run in')
+            ->addArgument('instance', InputArgument::REQUIRED, 'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
             ->addArgument('cmd', InputArgument::REQUIRED, 'The command to execute');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = new AwsInstance(
-            $input->getArgument('app'),
-            $input->getArgument('env')
+        $instance = InstanceFactory::createFromInput(
+            $input->getArgument('instance')
         );
 
         $output->write(

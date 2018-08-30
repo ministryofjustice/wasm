@@ -7,7 +7,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
-use WpEcs\Wordpress\AwsInstance;
+use WpEcs\Wordpress\InstanceFactory;
 
 class Shell extends Command
 {
@@ -16,16 +16,14 @@ class Shell extends Command
         $this
             ->setName('shell')
             ->setDescription('Opens an interactive shell on a running WordPress instance')
-            ->addArgument('app', InputArgument::REQUIRED, 'Name of the application')
-            ->addArgument('env', InputArgument::REQUIRED, 'Environment to run in')
+            ->addArgument('instance', InputArgument::REQUIRED, 'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
             ->addArgument('shell', InputArgument::OPTIONAL, 'The shell to execute', 'bash');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = new AwsInstance(
-            $input->getArgument('app'),
-            $input->getArgument('env')
+        $instance = InstanceFactory::createFromInput(
+            $input->getArgument('instance')
         );
 
         $terminal = new Terminal();

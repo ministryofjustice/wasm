@@ -23,6 +23,7 @@ class AwsInstance extends AbstractInstance
     public function __construct($appName, $env)
     {
         $this->Aws = new AwsResources($appName, $env);
+        $this->name = "$appName-$env";
     }
 
     public function newCommand($command, $dockerOptions = [], ...$options)

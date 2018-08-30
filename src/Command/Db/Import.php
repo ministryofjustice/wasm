@@ -6,7 +6,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use WpEcs\Wordpress\AwsInstance;
+use WpEcs\Wordpress\InstanceFactory;
 
 class Import extends Command
 {
@@ -15,16 +15,14 @@ class Import extends Command
         $this
             ->setName('db:import')
             ->setDescription('Import a SQL file into a running WordPress instance')
-            ->addArgument('app', InputArgument::REQUIRED, 'Name of the application')
-            ->addArgument('env', InputArgument::REQUIRED, 'Environment to run in')
-            ->addArgument('filename', InputArgument::REQUIRED, 'The filename to import');
+            ->addArgument('instance', InputArgument::REQUIRED, 'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
+            ->addArgument('filename', InputArgument::REQUIRED, 'The SQL file to import');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = new AwsInstance(
-            $input->getArgument('app'),
-            $input->getArgument('env')
+        $instance = InstanceFactory::createFromInput(
+            $input->getArgument('instance')
         );
 
         $fromFile = $input->getArgument('filename');
