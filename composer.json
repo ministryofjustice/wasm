@@ -3,7 +3,7 @@
     "description": "WordPress AWS Site Manager. Manage MOJ Digital WordPress instances running in AWS.",
     "type": "project",
     "bin": [
-        "wasm"
+        "bin/wasm"
     ],
     "require": {
         "php" : "^7.1",
