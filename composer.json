@@ -1,8 +1,15 @@
 {
+    "name": "ministryofjustice/wasm",
+    "description": "WordPress AWS Site Manager. Manage MOJ Digital WordPress instances running in AWS.",
+    "type": "project",
+    "bin": [
+        "wasm"
+    ],
     "require": {
+        "php" : "^7.1",
+        "ext-json": "*",
         "symfony/console": "^4.1",
         "aws/aws-sdk-php": "^3.64",
-        "ext-json": "*",
         "symfony/process": "^4.1"
     },
     "autoload": {

@@ -10,6 +10,7 @@ use WpEcs\Command\Db;
 use WpEcs\Command\Migrate;
 
 $app = new Application();
+$app->setName('WordPress AWS Site Manager');
 $app->addCommands([
     new Exec(),
     new Shell(),
