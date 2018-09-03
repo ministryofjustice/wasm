@@ -29,8 +29,8 @@ class Migrate extends Command
         $to   = $input->getArgument('to');
 
         $migration = new Migration(
-            InstanceFactory::createFromInput($from),
-            InstanceFactory::createFromInput($to),
+            InstanceFactory::create($from),
+            InstanceFactory::create($to),
             $output
         );
         $migration->migrate();

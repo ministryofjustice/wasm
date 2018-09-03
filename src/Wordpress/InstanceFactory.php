@@ -2,28 +2,8 @@
 
 namespace WpEcs\Wordpress;
 
-use Symfony\Component\Console\Exception\InvalidArgumentException;
-
 class InstanceFactory
 {
-    /**
-     * The same as self::create() method, however if the $identifier is invalid it will throw an InvalidArgumentException.
-     * Therefore, this method should be used when the $identifier has been supplied as a console input argument.
-     *
-     * @param string $identifier
-     *
-     * @return AbstractInstance
-     * @throws InvalidArgumentException
-     */
-    public static function createFromInput($identifier)
-    {
-        try {
-            return self::create($identifier);
-        } catch (\Exception $e) {
-            throw new InvalidArgumentException($e->getMessage());
-        }
-    }
-
     /**
      * Create a WordPress instance object
      * Depending on the $identifier provided, this will either be an AwsInstance or a LocalInstance
@@ -35,12 +15,12 @@ class InstanceFactory
      */
     public static function create($identifier)
     {
-        if ($id = self::awsIdentifier($identifier)) {
-            // This is an AWS instance identifier
-            return new AwsInstance($id['appName'], $id['env']);
-        } elseif ($path = self::localIdentifier($identifier)) {
+        if ($path = self::localIdentifier($identifier)) {
             // This is a local instance identifier
             return new LocalInstance($path);
+        } elseif ($id = self::awsIdentifier($identifier)) {
+            // This is an AWS instance identifier
+            return new AwsInstance($id['appName'], $id['env']);
         } else {
             // Could not recognise this a valid instance identifier
             $message = "Instance identifier \"$identifier\" is not valid\n";
@@ -82,20 +62,14 @@ class InstanceFactory
      */
     protected static function localIdentifier($identifier)
     {
-        $path = realpath($identifier);
-
-        if (!$path) {
+        if (!is_dir($identifier)) {
             return false;
         }
 
-        if (!is_dir($path)) {
+        if (!file_exists("$identifier/docker-compose.yml") && !file_exists("$identifier/docker-compose.yaml")) {
             return false;
         }
 
-        if (!file_exists("$path/docker-compose.yml") && !file_exists("$path/docker-compose.yaml")) {
-            return false;
-        }
-
-        return $path;
+        return $identifier;
     }
 }
