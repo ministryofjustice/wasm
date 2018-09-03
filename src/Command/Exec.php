@@ -22,7 +22,7 @@ class Exec extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = InstanceFactory::createFromInput(
+        $instance = InstanceFactory::create(
             $input->getArgument('instance')
         );
 
