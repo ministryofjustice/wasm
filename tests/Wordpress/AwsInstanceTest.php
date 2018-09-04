@@ -31,6 +31,12 @@ class AwsInstanceTest extends TestCase
         $this->assertEquals('s3://example-dev-bucket/uploads', $this->instance->uploadsPath);
     }
 
+    /**
+     * Data Provider
+     * Supply commands as a STRING
+     *
+     * @return array
+     */
     public function commandStringProvider()
     {
         return [
@@ -59,9 +65,47 @@ class AwsInstanceTest extends TestCase
     }
 
     /**
-     * @dataProvider commandStringProvider
+     * Data Provider
+     * Supply commands as an ARRAY
+     *
+     * @return array
      */
-    public function testNewCommandString($command, $dockerOptions, $sshOptions, $expectedCommandLine)
+    public function commandArrayProvider()
+    {
+        return [
+            [
+                // Simple command
+                ['ls'],
+                [],
+                [],
+                "'ssh' 'ec2-user@ec2host.com' 'docker' 'exec' 'c8a7b8' ''\''ls'\'''",
+            ],
+            [
+                // Command with parameter containing spaces & option flags (which must be passed, escaped, to the docker exec command)
+                [
+                    'echo',
+                    '-n',
+                    'Hello world'
+                ],
+                [],
+                [],
+                "'ssh' 'ec2-user@ec2host.com' 'docker' 'exec' 'c8a7b8' ''\''echo'\''' ''\''-n'\''' ''\''Hello world'\'''",
+            ],
+            [
+                // Command with docker and SSH options
+                ['bash'],
+                ['-ti'],
+                ['-t'],
+                "'ssh' 'ec2-user@ec2host.com' '-t' 'docker' 'exec' '-ti' 'c8a7b8' ''\''bash'\'''",
+            ]
+        ];
+    }
+
+    /**
+     * @dataProvider commandStringProvider
+     * @dataProvider commandArrayProvider
+     */
+    public function testNewCommand($command, $dockerOptions, $sshOptions, $expectedCommandLine)
     {
         if ($sshOptions == []) {
             // Don't pass optional parameter $sshOptions if it's empty
@@ -71,5 +115,29 @@ class AwsInstanceTest extends TestCase
         }
         $this->assertInstanceOf(Process::class, $process);
         $this->assertEquals($expectedCommandLine, $process->getCommandLine());
+    }
+
+    public function testName()
+    {
+        $name = $this->instance->name;
+        $this->assertEquals('example-dev', $name);
+    }
+
+    public function testUploadsBaseUrl()
+    {
+        $instance = $this->createPartialMock(
+            AwsInstance::class,
+            ['env']
+        );
+
+        $expected = 'https://s3-eu-west-2.amazonaws.com/example-dev-bucket/uploads';
+
+        $instance->expects($this->once())
+                 ->method('env')
+                 ->with('S3_UPLOADS_BASE_URL')
+                 ->willReturn($expected);
+
+        $actual = $instance->uploadsBaseUrl;
+        $this->assertEquals($expected, $actual);
     }
 }
