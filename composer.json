@@ -19,6 +19,11 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^7",
-        "mikey179/vfsStream": "^1.6"
+        "mikey179/vfsStream": "^1.6",
+        "psy/psysh": "@stable"
+    },
+    "scripts": {
+      "test": "vendor/bin/phpunit",
+      "coverage": "vendor/bin/phpunit --coverage-html coverage --whitelist src"
     }
 }
