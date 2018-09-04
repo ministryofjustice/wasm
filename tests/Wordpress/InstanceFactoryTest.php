@@ -32,6 +32,12 @@ class InstanceFactoryTest extends TestCase
         $this->assertInstanceOf(AwsInstance::class, $instance);
     }
 
+    public function testCreateWithInvalidAwsIdentifier()
+    {
+        $this->expectException(Exception::class);
+        InstanceFactory::create('example:qa');
+    }
+
     public function localFilenameProvider()
     {
         return [
@@ -50,5 +56,13 @@ class InstanceFactoryTest extends TestCase
 
         $instance = InstanceFactory::create($vfs->url());
         $this->assertInstanceOf(LocalInstance::class, $instance);
+    }
+
+    public function testCreateWithEmptyLocalDirectory()
+    {
+        $vfs = vfsStream::setup();
+
+        $this->expectException(Exception::class);
+        InstanceFactory::create($vfs->url());
     }
 }

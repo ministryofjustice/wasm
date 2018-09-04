@@ -19,10 +19,11 @@ class AwsInstance extends AbstractInstance
      *
      * @param string $appName The name of the site, as defined by the stack's `AppName` parameter
      * @param string $env The environment of the instance: dev|staging|prod
+     * @param AwsResources $aws
      */
-    public function __construct($appName, $env)
+    public function __construct($appName, $env, AwsResources $aws)
     {
-        $this->Aws  = new AwsResources($appName, $env);
+        $this->Aws  = $aws;
         $this->name = "$appName-$env";
     }
 
