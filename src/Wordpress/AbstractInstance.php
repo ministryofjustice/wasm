@@ -80,10 +80,11 @@ abstract class AbstractInstance
      * Export the instance's database to the supplied file handle
      *
      * @param resource $fh An open file handle to export to
+     * @param resource|bool $err Error output will be written here
      *
      * @throws ProcessFailedException if the process didn't exit successfully
      */
-    public function exportDatabase($fh)
+    public function exportDatabase($fh, $err = STDERR)
     {
         $process = $this->newCommand('wp --allow-root db export -');
 
@@ -99,11 +100,11 @@ abstract class AbstractInstance
          * @param string $type
          * @param string $buffer
          */
-        $saveOutputStream = function ($type, $buffer) use ($fh) {
+        $saveOutputStream = function ($type, $buffer) use ($fh, $err) {
             if ($type === Process::OUT) {
                 fwrite($fh, $buffer);
             } else {
-                fwrite(STDERR, $buffer);
+                fwrite($err, $buffer);
             }
         };
 

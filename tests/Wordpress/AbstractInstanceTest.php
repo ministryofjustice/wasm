@@ -75,9 +75,12 @@ class AbstractInstanceTest extends TestCase
     {
         $vfs = vfsStream::setup('root', null);
         $exportPath = "{$vfs->url()}/database.sql";
+        $errorPath = "{$vfs->url()}/stderr";
         $fh = fopen($exportPath, 'w');
+        $err = fopen($errorPath, 'w');
 
         $exportData = 'Output from "wp db export" command which should be written to the SQL file';
+        $errorMessage = 'An example error message sent to stderr';
 
         $process = $this->createMock(Process::class);
         $process->expects($this->atLeastOnce())
@@ -86,7 +89,10 @@ class AbstractInstanceTest extends TestCase
         $process->expects($this->atLeastOnce())
                 ->method('mustRun')
                 ->with($this->callback('is_callable'))
-                ->willReturnCallback(function($callback) use ($exportData) {
+                ->willReturnCallback(function($callback) use ($exportData, $errorMessage) {
+                    // Output some data to stderr
+                    $callback(Process::ERR, $errorMessage);
+
                     // Split export data into chunks to emulate command output being streamed to the callback via multiple invocations
                     $exportChunks = str_split($exportData, 20);
                     foreach ($exportChunks as $chunk) {
@@ -100,11 +106,15 @@ class AbstractInstanceTest extends TestCase
                  ->with('wp --allow-root db export -')
                  ->willReturn($process);
 
-        $instance->exportDatabase($fh);
+        $instance->exportDatabase($fh, $err);
         fclose($fh);
+        fclose($err);
 
         $fileContents = file_get_contents($exportPath);
         $this->assertEquals($exportData, $fileContents);
+
+        $errorContents = file_get_contents($errorPath);
+        $this->assertEquals($errorMessage, $errorContents);
     }
 
     /**
