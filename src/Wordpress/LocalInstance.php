@@ -24,14 +24,10 @@ class LocalInstance extends AbstractInstance
     /**
      * LocalInstance constructor.
      *
-     * @param string $workingDirectory Absolute path to the instance directory (optional)
+     * @param string $workingDirectory Path to the instance directory (can be relative)
      */
-    public function __construct($workingDirectory = null)
+    public function __construct($workingDirectory)
     {
-        if (is_null($workingDirectory)) {
-            $workingDirectory = getcwd();
-        }
-
         $this->workingDirectory = $workingDirectory;
         $this->name             = basename($workingDirectory);
     }
@@ -43,8 +39,7 @@ class LocalInstance extends AbstractInstance
      */
     protected function getDockerContainerId()
     {
-        $process = new Process('docker-compose ps -q wordpress');
-        $process->setWorkingDirectory($this->workingDirectory);
+        $process = $this->newProcess('docker-compose ps -q wordpress');
         $id = $process->mustRun()->getOutput();
 
         return trim($id);
@@ -59,19 +54,22 @@ class LocalInstance extends AbstractInstance
 
     protected function getUploadsPath()
     {
-        $directory = 'web/app/uploads';
-        $path      = $this->workingDirectory . DIRECTORY_SEPARATOR . $directory;
+        return $this->workingDirectory . '/web/app/uploads';
+    }
 
-        return realpath($path);
+    protected function newProcess($command)
+    {
+        $process = new Process($command);
+        $process->setWorkingDirectory($this->workingDirectory);
+
+        return $process;
     }
 
     public function newCommand($command, $dockerOptions = [], ...$options)
     {
         $command = $this->prepareCommand($command, $dockerOptions);
-        $process = new Process($command);
-        $process->setWorkingDirectory($this->workingDirectory);
 
-        return $process;
+        return $this->newProcess($command);
     }
 
     /**
