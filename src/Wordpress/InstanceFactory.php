@@ -2,6 +2,7 @@
 
 namespace WpEcs\Wordpress;
 
+use Aws\Sdk;
 use WpEcs\Wordpress\AwsInstance\AwsResources;
 
 class InstanceFactory
@@ -22,7 +23,11 @@ class InstanceFactory
             return new LocalInstance($path);
         } elseif ($id = self::awsIdentifier($identifier)) {
             // This is an AWS instance identifier
-            $aws = new AwsResources($id['appName'], $id['env']);
+            $sdk = new Sdk([
+                'region'  => 'eu-west-2',
+                'version' => 'latest',
+            ]);
+            $aws = new AwsResources($id['appName'], $id['env'], $sdk);
             return new AwsInstance($id['appName'], $id['env'], $aws);
         } else {
             // Could not recognise this a valid instance identifier

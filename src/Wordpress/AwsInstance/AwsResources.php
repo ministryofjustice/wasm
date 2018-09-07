@@ -29,20 +29,20 @@ class AwsResources
 
     protected $sdk;
 
-    public function __construct($appName, $env)
+    public function __construct($appName, $env, Sdk $sdk)
     {
         $this->appName = $appName;
         $this->env     = $env;
+        $this->sdk     = $sdk;
+    }
 
-        $this->sdk = new Sdk([
-            'region'  => 'eu-west-2',
-            'version' => 'latest',
-        ]);
+    public function newProcess($command) {
+        return new Process($command);
     }
 
     protected function getDockerContainerId()
     {
-        $hostTask = (new Process([
+        $hostTask = ($this->newProcess([
             'ssh',
             "ec2-user@{$this->ec2Hostname}",
             "curl -s localhost:51678/v1/tasks?taskarn={$this->ecsTaskArn}",
@@ -50,9 +50,11 @@ class AwsResources
 
         $hostTask = json_decode($hostTask, true);
 
-        foreach ($hostTask['Containers'] as $container) {
-            if ($container['Name'] == 'web') {
-                return $container['DockerId'];
+        if (!empty($hostTask['Containers'])) {
+            foreach ($hostTask['Containers'] as $container) {
+                if ($container['Name'] == 'web') {
+                    return $container['DockerId'];
+                }
             }
         }
 

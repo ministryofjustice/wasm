@@ -98,6 +98,7 @@ class LocalInstanceTest extends TestCase
             ],
             [
                 // Command with parameter containing spaces & option flags (which must be passed, escaped, to the docker exec command)
+                // Parameters wrapped in quotes must be executed as one parameter
                 'echo -n "Hello world"',
                 [],
                 "'docker' 'exec' 'c8a7b8' 'echo' '-n' 'Hello world'",
