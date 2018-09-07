@@ -20,6 +20,8 @@ class InstanceFactoryTest extends TestCase
             ['example:dev'],
             ['example:staging'],
             ['example:prod'],
+            ['example2:dev'], // Identifier containing a number
+            ['app-name:dev'], // Identifier containing a dash
         ];
     }
 
