@@ -67,7 +67,7 @@ class Migration
      *
      * @param string $name
      */
-    protected function beginStep($name)
+    public function beginStep($name)
     {
         if ($this->output->getVerbosity() == OutputInterface::VERBOSITY_NORMAL) {
             $this->output->writeln($name);
@@ -88,12 +88,12 @@ class Migration
      * - Import that temporary file into `destination`
      * - Delete the temporary file
      */
-    protected function moveDatabase()
+    public function moveDatabase()
     {
         $fh = tmpfile();
         $this->output->writeln('Exporting database from source...', OutputInterface::VERBOSITY_VERBOSE);
         $this->source->exportDatabase($fh);
-        fseek($fh, 0);
+        rewind($fh);
         $this->output->writeln('Importing database into destination...', OutputInterface::VERBOSITY_VERBOSE);
         $this->dest->importDatabase($fh);
         fclose($fh);
@@ -103,7 +103,7 @@ class Migration
      * Helper method to output the end of a step
      * This outputs a blank line to visually separate between steps
      */
-    protected function endStep()
+    public function endStep()
     {
         $this->output->writeln('', OutputInterface::VERBOSITY_VERBOSE);
     }
@@ -116,7 +116,7 @@ class Migration
      * - Rewrite website URLs
      * - Rewrite references to site domain name
      */
-    protected function rewriteDatabase()
+    public function rewriteDatabase()
     {
         // Rewrite media upload URLs
         $this->output->writeln('Rewriting references to media uploads base URL...', OutputInterface::VERBOSITY_VERBOSE);
@@ -142,7 +142,7 @@ class Migration
      * @param string $search
      * @param string $replace
      */
-    protected function dbSearchReplace($search, $replace)
+    public function dbSearchReplace($search, $replace)
     {
         $command = [
             'wp',
@@ -182,7 +182,7 @@ class Migration
      * If the migration is to sync two local instances, it'll use `rsync`
      * Otherwise `aws s3 sync` will be used to sync to/from an S3 bucket
      */
-    protected function syncUploads()
+    public function syncUploads()
     {
         $from = $this->source->uploadsPath;
         $to   = $this->dest->uploadsPath;
@@ -201,9 +201,14 @@ class Migration
             $this->output->write($buffer, false, OutputInterface::VERBOSITY_VERBOSE);
         };
 
-        $process = new Process($command);
+        $process = $this->newProcess($command);
         $this->output->writeln("Running command: <comment>$command</comment>", OutputInterface::VERBOSITY_VERBOSE);
         $process->disableOutput();
         $process->mustRun($streamOutput);
+    }
+
+    public function newProcess($command)
+    {
+        return new Process($command);
     }
 }
