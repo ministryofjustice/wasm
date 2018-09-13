@@ -7,6 +7,7 @@ use WpEcs\Wordpress\LocalInstance;
 use WpEcs\Wordpress\AwsInstance;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Console\Terminal;
 
 class MigrationTest extends TestCase
 {
@@ -281,12 +282,17 @@ class MigrationTest extends TestCase
                      ->method('getVerbosity')
                      ->willReturn(OutputInterface::VERBOSITY_VERBOSE);
 
+        $terminalWidth = (new Terminal())->getWidth();
+        // Match a string of dashes, exactly the width of the current terminal
+        // e.g. "------------------------------" for a terminal session 30 columns wide
+        $fullLineRegex = sprintf('/^-{%d}$/', $terminalWidth);
+
         $this->output->expects($this->exactly(3))
                      ->method('writeln')
                      ->withConsecutive(
-                         ['--------------------------------------------------------------------------------', OutputInterface::VERBOSITY_VERBOSE],
+                         [$this->matchesRegularExpression($fullLineRegex), OutputInterface::VERBOSITY_VERBOSE],
                          ['<comment>NAME OF STEP</comment>',                                                  OutputInterface::VERBOSITY_VERBOSE],
-                         ['--------------------------------------------------------------------------------', OutputInterface::VERBOSITY_VERBOSE]
+                         [$this->matchesRegularExpression($fullLineRegex), OutputInterface::VERBOSITY_VERBOSE]
                      );
 
         $migration->beginStep('Name of step');
