@@ -16,12 +16,12 @@ class InstanceFactory
      * @return AbstractInstance
      * @throws \Exception
      */
-    public static function create($identifier)
+    public function create($identifier)
     {
-        if ($path = self::localIdentifier($identifier)) {
+        if ($path = $this->localIdentifier($identifier)) {
             // This is a local instance identifier
             return new LocalInstance($path);
-        } elseif ($id = self::awsIdentifier($identifier)) {
+        } elseif ($id = $this->awsIdentifier($identifier)) {
             // This is an AWS instance identifier
             $sdk = new Sdk([
                 'region'  => 'eu-west-2',
@@ -47,7 +47,7 @@ class InstanceFactory
      *
      * @return array|bool
      */
-    protected static function awsIdentifier($identifier)
+    protected function awsIdentifier($identifier)
     {
         if (preg_match('/^([a-z0-9-]+):(dev|staging|prod)$/', $identifier, $matches)) {
             return [
@@ -68,7 +68,7 @@ class InstanceFactory
      *
      * @return string|bool
      */
-    protected static function localIdentifier($identifier)
+    protected function localIdentifier($identifier)
     {
         if (!is_dir($identifier)) {
             return false;

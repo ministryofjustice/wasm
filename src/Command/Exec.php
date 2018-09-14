@@ -10,6 +10,14 @@ use WpEcs\Wordpress\InstanceFactory;
 
 class Exec extends Command
 {
+    protected $instanceFactory;
+
+    public function __construct(InstanceFactory $instanceFactory)
+    {
+        $this->instanceFactory = $instanceFactory;
+        parent::__construct();
+    }
+
     protected function configure()
     {
         $this
@@ -22,7 +30,7 @@ class Exec extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = InstanceFactory::create(
+        $instance = $this->instanceFactory->create(
             $input->getArgument('instance')
         );
 

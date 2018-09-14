@@ -11,6 +11,14 @@ use WpEcs\Wordpress\InstanceFactory;
 
 class Shell extends Command
 {
+    protected $instanceFactory;
+
+    public function __construct(InstanceFactory $instanceFactory)
+    {
+        $this->instanceFactory = $instanceFactory;
+        parent::__construct();
+    }
+
     protected function configure()
     {
         $this
@@ -23,7 +31,7 @@ class Shell extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = InstanceFactory::create(
+        $instance = $this->instanceFactory->create(
             $input->getArgument('instance')
         );
 
@@ -39,6 +47,6 @@ class Shell extends Command
             ['-t']
         );
         $process->setTty(true);
-        $process->mustRun();
+        $process->run();
     }
 }

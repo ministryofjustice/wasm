@@ -8,10 +8,19 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use WpEcs\Service\Migration;
+use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\InstanceFactory;
 
 class Migrate extends Command
 {
+    protected $instanceFactory;
+
+    public function __construct(InstanceFactory $instanceFactory)
+    {
+        $this->instanceFactory = $instanceFactory;
+        parent::__construct();
+    }
+
     protected function configure()
     {
         $this
@@ -28,9 +37,9 @@ class Migrate extends Command
         $from = $input->getArgument('from');
         $to   = $input->getArgument('to');
 
-        $migration = new Migration(
-            InstanceFactory::create($from),
-            InstanceFactory::create($to),
+        $migration = $this->newMigration(
+            $this->instanceFactory->create($from),
+            $this->instanceFactory->create($to),
             $output
         );
         $migration->migrate();
@@ -46,5 +55,20 @@ class Migrate extends Command
         if ( ! empty($from) && $from == $to) {
             throw new InvalidArgumentException('"from" and "to" arguments cannot be the same');
         }
+    }
+
+    /**
+     * Proxy function to return a new Migration object
+     * This exists to make the class more testable, since the Migration object becomes mockable
+     *
+     * @param AbstractInstance $from
+     * @param AbstractInstance $to
+     * @param OutputInterface $output
+     *
+     * @return Migration
+     */
+    public function newMigration(AbstractInstance $from, AbstractInstance $to, OutputInterface $output)
+    {
+        return new Migration($from, $to, $output);
     }
 }

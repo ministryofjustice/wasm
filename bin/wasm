@@ -24,14 +24,20 @@ use WpEcs\Command\Exec;
 use WpEcs\Command\Shell;
 use WpEcs\Command\Db;
 use WpEcs\Command\Migrate;
+use WpEcs\Wordpress\InstanceFactory;
 
-$app = new Application();
-$app->setName('WordPress AWS Site Manager');
+/**
+ * Using manual Dependency Injection since the application's dependencies are
+ * simple enough that they don't warrant a full DI Container
+ */
+$instanceFactory = new InstanceFactory();
+
+$app = new Application('WordPress AWS Site Manager');
 $app->addCommands([
-    new Exec(),
-    new Shell(),
-    new Db\Export(),
-    new Db\Import(),
-    new Migrate(),
+    new Exec($instanceFactory),
+    new Shell($instanceFactory),
+    new Db\Export($instanceFactory),
+    new Db\Import($instanceFactory),
+    new Migrate($instanceFactory),
 ]);
 $app->run();
