@@ -11,6 +11,14 @@ use WpEcs\Wordpress\InstanceFactory;
 
 class Export extends Command
 {
+    protected $instanceFactory;
+
+    public function __construct(InstanceFactory $instanceFactory)
+    {
+        $this->instanceFactory = $instanceFactory;
+        parent::__construct();
+    }
+
     protected function configure()
     {
         $this
@@ -23,7 +31,7 @@ class Export extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = InstanceFactory::create(
+        $instance = $this->instanceFactory->create(
             $input->getArgument('instance')
         );
 
@@ -35,7 +43,7 @@ class Export extends Command
         $output->writeln("<info>Success:</info> Database exported to <comment>$toFile</comment>");
     }
 
-    protected function getFilename(InputInterface $input, AbstractInstance $instance)
+    public function getFilename(InputInterface $input, AbstractInstance $instance)
     {
         $filename = $input->getArgument('filename');
 
