@@ -1,5 +1,7 @@
 <?php
 
+namespace WpEcs\Tests\Wordpress\AwsInstance;
+
 use PHPUnit\Framework\TestCase;
 use WpEcs\Wordpress\AwsInstance\AwsResources;
 use Aws\Sdk;
@@ -8,6 +10,7 @@ use Aws\Ec2\Ec2Client;
 use Aws\CloudFormation\CloudFormationClient;
 use Aws\Result;
 use Symfony\Component\Process\Process;
+use Exception;
 
 class AwsResourcesTest extends TestCase
 {
@@ -56,6 +59,10 @@ class AwsResourcesTest extends TestCase
 
     /**
      * @dataProvider ecsClusterProvider
+     *
+     * @param string $appName
+     * @param string $env
+     * @param string $cluster
      */
     public function testEcsCluster($appName, $env, $cluster)
     {
@@ -115,6 +122,8 @@ class AwsResourcesTest extends TestCase
 
     /**
      * @dataProvider dockerContainerIdProvider
+     * @param string|bool $expected
+     * @param string $jsonOutput
      */
     public function testDockerContainerId($expected, $jsonOutput)
     {

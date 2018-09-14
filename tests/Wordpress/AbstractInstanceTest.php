@@ -1,5 +1,7 @@
 <?php
 
+namespace WpEcs\Tests\Wordpress;
+
 use PHPUnit\Framework\TestCase;
 use WpEcs\Wordpress\AbstractInstance;
 use Symfony\Component\Process\Process;
@@ -123,7 +125,7 @@ class AbstractInstanceTest extends TestCase
      * @param array $mockMethods Methods to mock
      *
      * @return \PHPUnit\Framework\MockObject\MockObject
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     private function newInstance($mockMethods = [])
     {

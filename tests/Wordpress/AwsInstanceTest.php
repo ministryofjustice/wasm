@@ -1,5 +1,7 @@
 <?php
 
+namespace WpEcs\Tests\Wordpress;
+
 use WpEcs\Wordpress\AwsInstance;
 use WpEcs\Wordpress\AwsInstance\AwsResources;
 use PHPUnit\Framework\TestCase;
@@ -105,6 +107,10 @@ class AwsInstanceTest extends TestCase
     /**
      * @dataProvider commandStringProvider
      * @dataProvider commandArrayProvider
+     * @param string|array $command
+     * @param array $dockerOptions
+     * @param array $sshOptions
+     * @param string $expectedCommandLine
      */
     public function testNewCommand($command, $dockerOptions, $sshOptions, $expectedCommandLine)
     {

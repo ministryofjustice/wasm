@@ -5,7 +5,6 @@ namespace WpEcs\Tests\Command\Db;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 use WpEcs\Command\Db\Import;
 use WpEcs\Tests\Command\MockInstanceHelper;
