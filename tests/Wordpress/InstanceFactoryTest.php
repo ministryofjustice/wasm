@@ -1,10 +1,13 @@
 <?php
 
+namespace WpEcs\Tests\Wordpress;
+
 use WpEcs\Wordpress\AwsInstance;
 use WpEcs\Wordpress\LocalInstance;
 use WpEcs\Wordpress\InstanceFactory;
 use PHPUnit\Framework\TestCase;
 use org\bovigo\vfs\vfsStream;
+use Exception;
 
 class InstanceFactoryTest extends TestCase
 {
@@ -37,6 +40,8 @@ class InstanceFactoryTest extends TestCase
 
     /**
      * @dataProvider awsIdentifierProvider
+     * @param string $identifier
+     * @throws \Exception
      */
     public function testCreateWithAwsIdentifier($identifier)
     {
@@ -60,6 +65,8 @@ class InstanceFactoryTest extends TestCase
 
     /**
      * @dataProvider localFilenameProvider
+     * @param string $filename
+     * @throws \Exception
      */
     public function testCreateWithLocalIdentifier($filename)
     {

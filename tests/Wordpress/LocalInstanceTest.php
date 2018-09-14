@@ -1,5 +1,7 @@
 <?php
 
+namespace WpEcs\Tests\Wordpress;
+
 use WpEcs\Wordpress\LocalInstance;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
@@ -7,18 +9,6 @@ use org\bovigo\vfs\vfsStream;
 
 class LocalInstanceTest extends TestCase
 {
-    /**
-     * @var LocalInstance
-     */
-    /*protected $instance;
-
-    protected function setUp()
-    {
-        $this->instance = new LocalInstance(
-            '/path/to/local-instance'
-        );
-    }*/
-
     public function testName()
     {
         $instance = new LocalInstance('/path/to/local-instance');
@@ -149,6 +139,9 @@ class LocalInstanceTest extends TestCase
     /**
      * @dataProvider commandStringProvider
      * @dataProvider commandArrayProvider
+     * @param string|array $command
+     * @param array $dockerOptions
+     * @param string $expectedCommandLine
      */
     public function testNewCommand($command, $dockerOptions, $expectedCommandLine)
     {

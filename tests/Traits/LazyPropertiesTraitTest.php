@@ -1,5 +1,7 @@
 <?php
 
+namespace WpEcs\Tests\Traits;
+
 use PHPUnit\Framework\TestCase;
 use WpEcs\Traits\LazyPropertiesTrait;
 

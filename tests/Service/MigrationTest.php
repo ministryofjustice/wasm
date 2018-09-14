@@ -1,5 +1,7 @@
 <?php
 
+namespace WpEcs\Tests\Service;
+
 use PHPUnit\Framework\TestCase;
 use WpEcs\Service\Migration;
 use WpEcs\Wordpress\AbstractInstance;
@@ -188,6 +190,9 @@ class MigrationTest extends TestCase
 
     /**
      * @dataProvider syncUploadsDataProvider
+     * @param array $sourceArgs
+     * @param array $destArgs
+     * @throws \ReflectionException
      */
     public function testSyncUploads($sourceArgs, $destArgs)
     {
@@ -315,7 +320,7 @@ class MigrationTest extends TestCase
      * @param string $className Class to mock (default to AbstractInstance)
      *
      * @return \PHPUnit\Framework\MockObject\MockObject
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     protected function mockInstance($className = AbstractInstance::class)
     {
