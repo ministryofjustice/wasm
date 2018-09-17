@@ -110,11 +110,19 @@ class AwsResourcesTest extends TestCase
             [
                 // Happy path data
                 '4c6ebc55289db174d6c40af51eabe3c37deb2a28e7a08b400dc0644b383ae0bb',
+                false,
                 '{"Arn":"arn:aws:ecs:eu-west-2:000000000000:task/4a0223a8-a99a-45dc-981b-1fccc27a8cc2","DesiredStatus":"RUNNING","KnownStatus":"RUNNING","Family":"example-dev","Version":"27","Containers":[{"DockerId":"4c6ebc55289db174d6c40af51eabe3c37deb2a28e7a08b400dc0644b383ae0bb","DockerName":"ecs-example-dev-27-web-8246fc7457ced635711e","Name":"web","Ports":[{"ContainerPort":80,"Protocol":"tcp","HostPort":32893}]}]}',
             ],
             [
                 // Docker container does not exist on host. Expect an exception.
                 false,
+                "There is no 'web' container running on the host for this ECS Task",
+                '{"Arn":"arn:aws:ecs:eu-west-2:000000000000:task/4a0223a8-a99a-45dc-981b-1fccc27a8cc2","DesiredStatus":"RUNNING","KnownStatus":"RUNNING","Family":"example-dev","Version":"27","Containers":[{"DockerId":"4c6ebc55289db174d6c40af51eabe3c37deb2a28e7a08b400dc0644b383ae0bb","DockerName":"ecs-example-dev-27-web-8246fc7457ced635711e","Name":"something-other-than-web","Ports":[{"ContainerPort":80,"Protocol":"tcp","HostPort":32893}]}]}',
+            ],
+            [
+                // Docker container does not exist on host. Expect an exception.
+                false,
+                'There are no containers running on the host for this ECS Task',
                 '{"Arn":"","KnownStatus":"","Family":"","Version":"","Containers":null}',
             ]
         ];
@@ -123,9 +131,10 @@ class AwsResourcesTest extends TestCase
     /**
      * @dataProvider dockerContainerIdProvider
      * @param string|bool $expected
+     * @param string|bool $expectedExceptionMessage
      * @param string $jsonOutput
      */
-    public function testDockerContainerId($expected, $jsonOutput)
+    public function testDockerContainerId($expected, $expectedExceptionMessage, $jsonOutput)
     {
         $expectedSshCommand = [
             'ssh',
@@ -153,7 +162,7 @@ class AwsResourcesTest extends TestCase
 
         if (!$expected) {
             $this->expectException(Exception::class);
-            $this->expectExceptionMessage('Docker container not found on host');
+            $this->expectExceptionMessage($expectedExceptionMessage);
             $instance->dockerContainerId;
         } else {
             $actual = $instance->dockerContainerId;
