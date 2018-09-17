@@ -50,15 +50,17 @@ class AwsResources
 
         $hostTask = json_decode($hostTask, true);
 
-        if (!empty($hostTask['Containers'])) {
-            foreach ($hostTask['Containers'] as $container) {
-                if ($container['Name'] == 'web') {
-                    return $container['DockerId'];
-                }
+        if (empty($hostTask['Containers'])) {
+            throw new \Exception('There are no containers running on the host for this ECS Task');
+        }
+
+        foreach ($hostTask['Containers'] as $container) {
+            if ($container['Name'] == 'web') {
+                return $container['DockerId'];
             }
         }
 
-        throw new \Exception('Docker container not found on host');
+        throw new \Exception("There is no 'web' container running on the host for this ECS Task");
     }
 
     protected function getEc2Hostname()
