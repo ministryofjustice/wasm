@@ -69,7 +69,7 @@ class AwsInstance extends AbstractInstance
         }
 
         // Wrap all command arguments in single quotes so they pass-through to docker container unharmed (e.g. spaces intact)
-        $command = array_map(function($item) {
+        $command = array_map(function ($item) {
             return "'$item'";
         }, $command);
 

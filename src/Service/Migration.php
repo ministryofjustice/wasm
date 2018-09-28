@@ -153,8 +153,10 @@ class Migration
             $replace,
         ];
 
-        $this->output->writeln("Search for <comment>\"$search\"</comment> & replace with <comment>\"$replace\"</comment>",
-            OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->writeln(
+            "Search for <comment>\"$search\"</comment> & replace with <comment>\"$replace\"</comment>",
+            OutputInterface::VERBOSITY_VERBOSE
+        );
         $result = $this->dest->execute($command);
         $this->output->writeln($result, OutputInterface::VERBOSITY_VERBOSE);
     }
@@ -186,8 +188,10 @@ class Migration
     {
         $from = $this->source->uploadsPath;
         $to   = $this->dest->uploadsPath;
-        $this->output->writeln("Syncing files from <comment>$from</comment> to <comment>$to</comment>",
-            OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->writeln(
+            "Syncing files from <comment>$from</comment> to <comment>$to</comment>",
+            OutputInterface::VERBOSITY_VERBOSE
+        );
 
         if ($this->source instanceof LocalInstance && $this->dest instanceof LocalInstance) {
             // Sync files using `rsync` since both media directories are local

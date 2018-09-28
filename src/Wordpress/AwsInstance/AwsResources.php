@@ -36,7 +36,8 @@ class AwsResources
         $this->sdk     = $sdk;
     }
 
-    public function newProcess($command) {
+    public function newProcess($command)
+    {
         return new Process($command);
     }
 

@@ -26,10 +26,16 @@ class Migrate extends Command
         $this
             ->setName('migrate')
             ->setDescription('Migrate content between two WordPress instances')
-            ->addArgument('from', InputArgument::REQUIRED,
-                'Source instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
-            ->addArgument('to', InputArgument::REQUIRED,
-                'Destination instance identifier. Valid format: "<appname>:<env>" or path to a local directory');
+            ->addArgument(
+                'from',
+                InputArgument::REQUIRED,
+                'Source instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
+            )
+            ->addArgument(
+                'to',
+                InputArgument::REQUIRED,
+                'Destination instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -52,7 +58,7 @@ class Migrate extends Command
         $from = $input->getArgument('from');
         $to   = $input->getArgument('to');
 
-        if ( ! empty($from) && $from == $to) {
+        if (!empty($from) && $from == $to) {
             throw new InvalidArgumentException('"from" and "to" arguments cannot be the same');
         }
     }
