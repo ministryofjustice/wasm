@@ -32,6 +32,14 @@ class Shell extends Command
             ->addArgument('shell', InputArgument::OPTIONAL, 'The shell to execute', 'bash');
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     *
+     * @return int|null|void
+     * @throws \Exception
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) because we don't use $output, but the parent method defines it
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $instance = $this->instanceFactory->create(

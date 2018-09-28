@@ -38,12 +38,12 @@ class Export extends Command
             $input->getArgument('instance')
         );
 
-        $toFile = $this->getFilename($input, $instance);
-        $fh     = fopen($toFile, 'w');
-        $instance->exportDatabase($fh);
-        fclose($fh);
+        $filename = $this->getFilename($input, $instance);
+        $file     = fopen($filename, 'w');
+        $instance->exportDatabase($file);
+        fclose($file);
 
-        $output->writeln("<info>Success:</info> Database exported to <comment>$toFile</comment>");
+        $output->writeln("<info>Success:</info> Database exported to <comment>$filename</comment>");
     }
 
     public function getFilename(InputInterface $input, AbstractInstance $instance)

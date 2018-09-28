@@ -37,11 +37,11 @@ class Import extends Command
             $input->getArgument('instance')
         );
 
-        $fromFile = $input->getArgument('filename');
-        $fh       = fopen($fromFile, 'r');
-        $instance->importDatabase($fh);
-        fclose($fh);
+        $filename = $input->getArgument('filename');
+        $file     = fopen($filename, 'r');
+        $instance->importDatabase($file);
+        fclose($file);
 
-        $output->writeln("<info>Success:</info> Database imported from <comment>$fromFile</comment>");
+        $output->writeln("<info>Success:</info> Database imported from <comment>$filename</comment>");
     }
 }
