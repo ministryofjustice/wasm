@@ -32,14 +32,14 @@ class Migration
     /**
      * Migration constructor.
      *
-     * @param AbstractInstance $from
-     * @param AbstractInstance $to
+     * @param AbstractInstance $source
+     * @param AbstractInstance $destination
      * @param OutputInterface $output
      */
-    public function __construct(AbstractInstance $from, AbstractInstance $to, OutputInterface $output)
+    public function __construct(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
     {
-        $this->source = $from;
-        $this->dest   = $to;
+        $this->source = $source;
+        $this->dest   = $destination;
         $this->output = $output;
     }
 
@@ -71,14 +71,15 @@ class Migration
     {
         if ($this->output->getVerbosity() == OutputInterface::VERBOSITY_NORMAL) {
             $this->output->writeln($name);
-        } else {
-            $terminalWidth = (new Terminal())->getWidth();
-            $separator     = str_repeat('-', $terminalWidth);
-
-            $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
-            $this->output->writeln('<comment>' . strtoupper($name) . '</comment>', OutputInterface::VERBOSITY_VERBOSE);
-            $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
+            return;
         }
+
+        $terminalWidth = (new Terminal())->getWidth();
+        $separator     = str_repeat('-', $terminalWidth);
+
+        $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->writeln('<comment>' . strtoupper($name) . '</comment>', OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
     }
 
     /**
@@ -90,13 +91,13 @@ class Migration
      */
     public function moveDatabase()
     {
-        $fh = tmpfile();
+        $file = tmpfile();
         $this->output->writeln('Exporting database from source...', OutputInterface::VERBOSITY_VERBOSE);
-        $this->source->exportDatabase($fh);
-        rewind($fh);
+        $this->source->exportDatabase($file);
+        rewind($file);
         $this->output->writeln('Importing database into destination...', OutputInterface::VERBOSITY_VERBOSE);
-        $this->dest->importDatabase($fh);
-        fclose($fh);
+        $this->dest->importDatabase($file);
+        fclose($file);
     }
 
     /**
@@ -186,23 +187,22 @@ class Migration
      */
     public function syncUploads()
     {
-        $from = $this->source->uploadsPath;
-        $to   = $this->dest->uploadsPath;
+        $sourcePath = $this->source->uploadsPath;
+        $destPath   = $this->dest->uploadsPath;
         $this->output->writeln(
-            "Syncing files from <comment>$from</comment> to <comment>$to</comment>",
+            "Syncing files from <comment>$sourcePath</comment> to <comment>$destPath</comment>",
             OutputInterface::VERBOSITY_VERBOSE
         );
 
-        if ($this->source instanceof LocalInstance && $this->dest instanceof LocalInstance) {
-            // Sync files using `rsync` since both media directories are local
-            $command = "rsync -avh --delete \"$from/\" \"$to/\"";
-        } else {
-            // Sync files using `aws s3 sync`
-            $command = "aws s3 sync --delete \"$from\" \"$to\"";
-        }
+        $command = ($this->source instanceof LocalInstance && $this->dest instanceof LocalInstance) ?
+            // Sync files using `rsync` if both instances are local
+            "rsync -avh --delete \"$sourcePath/\" \"$destPath/\"" :
+            // Otherwise sync files using `aws s3 sync`
+            "aws s3 sync --delete \"$sourcePath\" \"$destPath\"";
 
         $streamOutput = function ($type, $buffer) {
             $this->output->write($buffer, false, OutputInterface::VERBOSITY_VERBOSE);
+            unset($type); // To suppress phpmd unused local variable warning
         };
 
         $process = $this->newProcess($command);

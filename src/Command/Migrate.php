@@ -27,12 +27,12 @@ class Migrate extends Command
             ->setName('migrate')
             ->setDescription('Migrate content between two WordPress instances')
             ->addArgument(
-                'from',
+                'source',
                 InputArgument::REQUIRED,
                 'Source instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
             )
             ->addArgument(
-                'to',
+                'destination',
                 InputArgument::REQUIRED,
                 'Destination instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
             );
@@ -40,26 +40,32 @@ class Migrate extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $from = $input->getArgument('from');
-        $to   = $input->getArgument('to');
+        $source = $input->getArgument('source');
+        $dest   = $input->getArgument('destination');
 
         $migration = $this->newMigration(
-            $this->instanceFactory->create($from),
-            $this->instanceFactory->create($to),
+            $this->instanceFactory->create($source),
+            $this->instanceFactory->create($dest),
             $output
         );
         $migration->migrate();
 
-        $output->writeln("<info>Success:</info> Migrated <comment>$from</comment> to <comment>$to</comment>");
+        $output->writeln("<info>Success:</info> Migrated <comment>$source</comment> to <comment>$dest</comment>");
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) because we don't use $output, but the parent method defines it
+     */
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
-        $from = $input->getArgument('from');
-        $to   = $input->getArgument('to');
+        $source = $input->getArgument('source');
+        $dest   = $input->getArgument('destination');
 
-        if (!empty($from) && $from == $to) {
-            throw new InvalidArgumentException('"from" and "to" arguments cannot be the same');
+        if (!empty($source) && $source == $dest) {
+            throw new InvalidArgumentException('"source" and "destination" arguments cannot be the same');
         }
     }
 
@@ -73,8 +79,8 @@ class Migrate extends Command
      *
      * @return Migration
      */
-    public function newMigration(AbstractInstance $from, AbstractInstance $to, OutputInterface $output)
+    public function newMigration(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
     {
-        return new Migration($from, $to, $output);
+        return new Migration($source, $destination, $output);
     }
 }

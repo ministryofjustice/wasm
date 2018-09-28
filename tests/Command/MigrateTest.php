@@ -39,21 +39,21 @@ class MigrateTest extends TestCase
     {
         $this->assertInstanceOf(Migrate::class, $this->command);
         $definition = $this->command->getDefinition();
-        $this->assertTrue($definition->hasArgument('from'));
-        $this->assertTrue($definition->hasArgument('to'));
+        $this->assertTrue($definition->hasArgument('source'));
+        $this->assertTrue($definition->hasArgument('destination'));
         $this->assertEquals(2, $definition->getArgumentRequiredCount());
     }
 
     public function testExecuteWithIdenticalFromAndToArguments()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('"from" and "to" arguments cannot be the same');
+        $this->expectExceptionMessage('"source" and "destination" arguments cannot be the same');
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'command' => $this->command->getName(),
-            'from'    => 'example:dev',
-            'to'      => 'example:dev',
+            'command'     => $this->command->getName(),
+            'source'      => 'example:dev',
+            'destination' => 'example:dev',
         ]);
     }
 
@@ -74,9 +74,9 @@ class MigrateTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'command' => $this->command->getName(),
-            'from'    => 'example:dev',
-            'to'      => 'example:staging',
+            'command'     => $this->command->getName(),
+            'source'      => 'example:dev',
+            'destination' => 'example:staging',
         ]);
 
         $successMessage = 'Success: Migrated example:dev to example:staging';
