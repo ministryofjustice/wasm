@@ -24,8 +24,11 @@ class Export extends Command
         $this
             ->setName('db:export')
             ->setDescription('Export the database of a running WordPress instance')
-            ->addArgument('instance', InputArgument::REQUIRED,
-                'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
+            ->addArgument(
+                'instance',
+                InputArgument::REQUIRED,
+                'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
+            )
             ->addArgument('filename', InputArgument::OPTIONAL, 'The file path to save to');
     }
 

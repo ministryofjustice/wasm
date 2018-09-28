@@ -23,8 +23,11 @@ class Import extends Command
         $this
             ->setName('db:import')
             ->setDescription('Import a SQL file into a running WordPress instance')
-            ->addArgument('instance', InputArgument::REQUIRED,
-                'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
+            ->addArgument(
+                'instance',
+                InputArgument::REQUIRED,
+                'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
+            )
             ->addArgument('filename', InputArgument::REQUIRED, 'The SQL file to import');
     }
 

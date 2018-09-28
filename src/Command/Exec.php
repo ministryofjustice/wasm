@@ -23,8 +23,11 @@ class Exec extends Command
         $this
             ->setName('exec')
             ->setDescription('Executes a command on a running WordPress instance')
-            ->addArgument('instance', InputArgument::REQUIRED,
-                'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory')
+            ->addArgument(
+                'instance',
+                InputArgument::REQUIRED,
+                'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
+            )
             ->addArgument('cmd', InputArgument::REQUIRED, 'The command to execute');
     }
 

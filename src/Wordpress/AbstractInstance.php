@@ -42,7 +42,7 @@ abstract class AbstractInstance
      */
     public function env($var)
     {
-        if ( ! isset($this->envCache[$var])) {
+        if (!isset($this->envCache[$var])) {
             $value                = $this->execute("printenv $var");
             $this->envCache[$var] = trim($value);
         }
