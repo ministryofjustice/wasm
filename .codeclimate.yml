@@ -40,6 +40,11 @@ checks:
     enabled: true
     config:
       threshold: #language-specific defaults. overrides affect all languages.
+plugins:
+  phpcodesniffer:
+    enabled: true
+    config:
+      standard: "PSR2"
 exclude_patterns:
 - "tests/"
 - "vendor/"
