@@ -45,6 +45,8 @@ plugins:
     enabled: true
     config:
       standard: "PSR2"
+  phpmd:
+    enabled: true
 exclude_patterns:
 - "tests/"
 - "vendor/"
