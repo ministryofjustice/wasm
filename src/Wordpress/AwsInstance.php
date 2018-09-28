@@ -68,7 +68,8 @@ class AwsInstance extends AbstractInstance
             $command = str_getcsv($command, ' ');
         }
 
-        // Wrap all command arguments in single quotes so they pass-through to docker container unharmed (e.g. spaces intact)
+        // Wrap all command arguments in single quotes so they pass through to the docker container unharmed
+        // (e.g. with spaces intact)
         $command = array_map(function ($item) {
             return "'$item'";
         }, $command);

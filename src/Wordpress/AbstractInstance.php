@@ -94,7 +94,7 @@ abstract class AbstractInstance
          * Output is saved to the open file handle ($fh) in chunks.
          * Also notice that Process output capturing is disabled with $process->disableOutput();
          *
-         * Together, this avoids the need to load the entire DB dump into an in-memory variable before writing it out to disk.
+         * This avoids the need to load the entire DB dump into an in-memory variable before writing it out to disk.
          * Instead, the dump is written to disk as it arrives, and is never stored in memory.
          *
          * @param string $type
