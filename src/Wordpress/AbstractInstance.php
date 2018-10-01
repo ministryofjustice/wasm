@@ -79,19 +79,19 @@ abstract class AbstractInstance
     /**
      * Export the instance's database to the supplied file handle
      *
-     * @param resource $fh An open file handle to export to
-     * @param resource|bool $err Error output will be written here
+     * @param resource $file An open file handle to export to
+     * @param resource|bool $errorOut Error output will be written here
      *
      * @throws ProcessFailedException if the process didn't exit successfully
      */
-    public function exportDatabase($fh, $err = STDERR)
+    public function exportDatabase($file, $errorOut = STDERR)
     {
         $process = $this->newCommand('wp --allow-root db export -');
 
         /**
          * Callback to process Process output
          *
-         * Output is saved to the open file handle ($fh) in chunks.
+         * Output is saved to the open file handle ($file) in chunks.
          * Also notice that Process output capturing is disabled with $process->disableOutput();
          *
          * This avoids the need to load the entire DB dump into an in-memory variable before writing it out to disk.
@@ -100,12 +100,13 @@ abstract class AbstractInstance
          * @param string $type
          * @param string $buffer
          */
-        $saveOutputStream = function ($type, $buffer) use ($fh, $err) {
-            if ($type === Process::OUT) {
-                fwrite($fh, $buffer);
-            } else {
-                fwrite($err, $buffer);
+        $saveOutputStream = function ($type, $buffer) use ($file, $errorOut) {
+            if ($type === Process::ERR) {
+                fwrite($errorOut, $buffer);
+                return;
             }
+
+            fwrite($file, $buffer);
         };
 
         $process->disableOutput();
@@ -115,14 +116,14 @@ abstract class AbstractInstance
     /**
      * Import the supplied file handle into the instance's database
      *
-     * @param resource $fh An open file handle to import from
+     * @param resource $file An open file handle to import from
      *
      * @throws ProcessFailedException if the process didn't exit successfully
      */
-    public function importDatabase($fh)
+    public function importDatabase($file)
     {
         $process = $this->newCommand('wp --allow-root db import -', ['-i']);
-        $process->setInput($fh);
+        $process->setInput($file);
         $process->mustRun();
     }
 }

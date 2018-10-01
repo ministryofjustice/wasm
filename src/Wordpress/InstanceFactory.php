@@ -21,21 +21,23 @@ class InstanceFactory
         if ($path = $this->localIdentifier($identifier)) {
             // This is a local instance identifier
             return new LocalInstance($path);
-        } elseif ($id = $this->awsIdentifier($identifier)) {
+        }
+
+        if ($awsId = $this->awsIdentifier($identifier)) {
             // This is an AWS instance identifier
             $sdk = new Sdk([
                 'region'  => 'eu-west-2',
                 'version' => 'latest',
             ]);
-            $aws = new AwsResources($id['appName'], $id['env'], $sdk);
-            return new AwsInstance($id['appName'], $id['env'], $aws);
-        } else {
-            // Could not recognise this a valid instance identifier
-            $message = "Instance identifier \"$identifier\" is not valid\n";
-            $message .= 'It must be in the format "<appname>:<env>" (e.g. "sitename:dev") for an AWS instance,' . "\n";
-            $message .= 'or the path to a local instance directory (which must contain a docker-compose.yml file).';
-            throw new \Exception($message);
+            $aws = new AwsResources($awsId['appName'], $awsId['env'], $sdk);
+            return new AwsInstance($awsId['appName'], $awsId['env'], $aws);
         }
+
+        // Could not recognise this as a valid instance identifier
+        $message = "Instance identifier \"$identifier\" is not valid\n";
+        $message .= 'It must be in the format "<appname>:<env>" (e.g. "sitename:dev") for an AWS instance,' . "\n";
+        $message .= 'or the path to a local instance directory (which must contain a docker-compose.yml file).';
+        throw new \Exception($message);
     }
 
     /**
@@ -61,8 +63,8 @@ class InstanceFactory
 
     /**
      * Check if the $identifier is for a local instance
-     * If it is, return the canonical filesystem path to instance
-     * ELse return false
+     * If it is, return the filesystem path to instance
+     * Else return false
      *
      * @param string $identifier
      *
@@ -70,11 +72,15 @@ class InstanceFactory
      */
     protected function localIdentifier($identifier)
     {
+        // $identifier must be a directory
         if (!is_dir($identifier)) {
             return false;
         }
 
-        if (!file_exists("$identifier/docker-compose.yml") && !file_exists("$identifier/docker-compose.yaml")) {
+        // The directory must contain a docker-compose config file
+        if (!file_exists("$identifier/docker-compose.yml") &&
+            !file_exists("$identifier/docker-compose.yaml")
+        ) {
             return false;
         }
 

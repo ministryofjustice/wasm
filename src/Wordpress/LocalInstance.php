@@ -40,9 +40,9 @@ class LocalInstance extends AbstractInstance
     protected function getDockerContainerId()
     {
         $process = $this->newProcess('docker-compose ps -q wordpress');
-        $id = $process->mustRun()->getOutput();
+        $dockerId = $process->mustRun()->getOutput();
 
-        return trim($id);
+        return trim($dockerId);
     }
 
     protected function getUploadsBaseUrl()
@@ -65,6 +65,16 @@ class LocalInstance extends AbstractInstance
         return $process;
     }
 
+    /**
+     * Return a new Process instance which, when run, will execute a command on the instance
+     *
+     * @param string|array $command The command to run
+     * @param array $dockerOptions Options for the `docker exec` command (optional)
+     * @param mixed ...$options
+     *
+     * @return Process
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) because we don't use $options, but the parent method defines it
+     */
     public function newCommand($command, $dockerOptions = [], ...$options)
     {
         $command = $this->prepareCommand($command, $dockerOptions);
