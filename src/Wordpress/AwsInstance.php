@@ -39,12 +39,11 @@ class AwsInstance extends AbstractInstance
 
     public function newCommand($command, $dockerOptions = [], ...$options)
     {
+        $sshOptions = [];
         if (count($options) > 0) {
             $sshOptions = $options[0];
-        } else {
-            $sshOptions = [];
         }
-
+        
         $command = $this->prepareCommand($command, $dockerOptions, $sshOptions);
         $process = new Process($command);
 
