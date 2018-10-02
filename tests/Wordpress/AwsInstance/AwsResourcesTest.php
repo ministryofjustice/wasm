@@ -2,6 +2,8 @@
 
 namespace WpEcs\Tests\Wordpress\AwsInstance;
 
+use Aws\CloudFormation\Exception\CloudFormationException;
+use Aws\CommandInterface;
 use PHPUnit\Framework\TestCase;
 use WpEcs\Wordpress\AwsInstance\AwsResources;
 use Aws\Sdk;
@@ -19,12 +21,19 @@ class AwsResourcesTest extends TestCase
      */
     protected $subject;
 
+    /**
+     * @var Sdk
+     */
+    protected $sdk;
+
     protected function setUp()
     {
+        $this->sdk = $this->mockSdk();
+
         $this->subject = new AwsResources(
             'example',
             'dev',
-            $this->mockSdk()
+            $this->sdk
         );
     }
 
@@ -86,6 +95,13 @@ class AwsResourcesTest extends TestCase
             'example-dev-bucket',
             $this->subject->s3BucketName
         );
+    }
+
+    public function testEcsServiceName()
+    {
+        $expected = 'example-dev-WebService-XXXXXXXXXXXXX';
+        $actual = $this->subject->ecsServiceName;
+        $this->assertEquals($expected, $actual);
     }
 
     public function testEcsTaskArn()
@@ -175,6 +191,99 @@ class AwsResourcesTest extends TestCase
         $process = $this->subject->newProcess('ssh');
         $this->assertInstanceOf(Process::class, $process);
         $this->assertEquals('ssh', $process->getCommandLine());
+    }
+
+    public function testStackIsActiveForNonExistentStack()
+    {
+        $cloudformation = $this->sdk->createCloudFormation();
+        $cloudformation->expects($this->once())
+                       ->method('describeStacks')
+                       ->willThrowException(
+                           new CloudFormationException(
+                               "Stack with id {$this->subject->stackName} does not exist",
+                               $this->createMock(CommandInterface::class)
+                           )
+                       );
+
+        $this->assertEquals(false, $this->subject->stackIsActive);
+    }
+
+    public function testStackIsActiveWithUnexpectedException()
+    {
+        $cloudformation = $this->sdk->createCloudFormation();
+        $cloudformation->expects($this->once())
+                       ->method('describeStacks')
+                       ->willThrowException(
+                           new CloudFormationException(
+                               "Something bad happened and all I got was this lousy exception",
+                               $this->createMock(CommandInterface::class)
+                           )
+                       );
+
+        $this->expectException(CloudFormationException::class);
+        $this->subject->stackIsActive;
+    }
+
+    public function testStackIsActiveWithActiveStack()
+    {
+        $cloudformation = $this->sdk->createCloudFormation();
+        $cloudformation->expects($this->once())
+                       ->method('describeStacks')
+                       ->willReturn(new Result([
+                           'Stacks' => [
+                               0 => [
+                                   'StackName' => 'example-dev',
+                                   'Parameters' => [
+                                       [
+                                           'ParameterKey' => 'AppName',
+                                           'ParameterValue' => 'example',
+                                       ],
+                                       [
+                                           'ParameterKey' => 'Active',
+                                           'ParameterValue' => 'true',
+                                       ],
+                                       [
+                                           'ParameterKey' => 'Environment',
+                                           'ParameterValue' => 'development',
+                                       ],
+                                   ],
+                               ],
+                               // Some response fields omitted for brevity
+                           ],
+                       ]));
+
+        $this->assertEquals(true, $this->subject->stackIsActive);
+    }
+
+    public function testStackIsActiveWithInactiveStack()
+    {
+        $cloudformation = $this->sdk->createCloudFormation();
+        $cloudformation->expects($this->once())
+                       ->method('describeStacks')
+                       ->willReturn(new Result([
+                           'Stacks' => [
+                               0 => [
+                                   'StackName' => 'example-dev',
+                                   'Parameters' => [
+                                       [
+                                           'ParameterKey' => 'AppName',
+                                           'ParameterValue' => 'example',
+                                       ],
+                                       [
+                                           'ParameterKey' => 'Active',
+                                           'ParameterValue' => 'false',
+                                       ],
+                                       [
+                                           'ParameterKey' => 'Environment',
+                                           'ParameterValue' => 'development',
+                                       ],
+                                   ],
+                               ],
+                               // Some response fields omitted for brevity
+                           ],
+                       ]));
+
+        $this->assertEquals(false, $this->subject->stackIsActive);
     }
 
     protected function mockSdk()
@@ -280,6 +389,7 @@ class AwsResourcesTest extends TestCase
     {
         $mock = $this->createPartialMock(CloudFormationClient::class, [
             'describeStackResource',
+            'describeStacks',
         ]);
 
         $mockData = [

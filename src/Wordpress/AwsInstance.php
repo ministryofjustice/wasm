@@ -90,4 +90,9 @@ class AwsInstance extends AbstractInstance
             $command
         );
     }
+
+    public function isRunning()
+    {
+        return $this->Aws->stackIsActive;
+    }
 }
