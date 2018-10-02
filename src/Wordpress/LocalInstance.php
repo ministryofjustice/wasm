@@ -109,4 +109,11 @@ class LocalInstance extends AbstractInstance
             $command
         );
     }
+
+    public function isRunning()
+    {
+        $process = $this->newProcess('docker-compose ps -q wordpress');
+        $containerId = $process->mustRun()->getOutput();
+        return !empty(trim($containerId));
+    }
 }

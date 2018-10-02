@@ -2,6 +2,7 @@
 
 namespace WpEcs\Wordpress\AwsInstance;
 
+use Aws\CloudFormation\Exception\CloudFormationException;
 use Aws\Sdk;
 use Symfony\Component\Process\Process;
 use WpEcs\Traits\LazyPropertiesTrait;
@@ -18,6 +19,7 @@ use WpEcs\Traits\LazyPropertiesTrait;
  * @property-read string ec2Hostname
  * @property-read string dockerContainerId
  * @property-read string s3BucketName
+ * @property-read bool   stackIsActive
  */
 class AwsResources
 {
@@ -141,5 +143,29 @@ class AwsResources
     protected function getStackName()
     {
         return "{$this->appName}-{$this->env}";
+    }
+
+    protected function getStackIsActive()
+    {
+        $cloudformation = $this->sdk->createCloudFormation();
+
+        try {
+            $stack = $cloudformation->describeStacks([
+                'StackName' => $this->stackName,
+            ]);
+
+            foreach ($stack['Stacks'][0]['Parameters'] as $param) {
+                if ($param['ParameterKey']   == 'Active' &&
+                    $param['ParameterValue'] == 'true') {
+                    return true;
+                }
+            }
+        } catch (CloudFormationException $e) {
+            if (strpos($e->getMessage(), "Stack with id {$this->stackName} does not exist") !== false) {
+                return false;
+            }
+
+            throw $e;
+        }
     }
 }
