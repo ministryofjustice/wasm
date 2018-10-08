@@ -144,28 +144,4 @@ class AwsResources
     {
         return "{$this->appName}-{$this->env}";
     }
-
-    protected function getStackIsActive()
-    {
-        $cloudformation = $this->sdk->createCloudFormation();
-
-        try {
-            $stack = $cloudformation->describeStacks([
-                'StackName' => $this->stackName,
-            ]);
-
-            foreach ($stack['Stacks'][0]['Parameters'] as $param) {
-                if ($param['ParameterKey']   == 'Active' &&
-                    $param['ParameterValue'] == 'true') {
-                    return true;
-                }
-            }
-        } catch (CloudFormationException $e) {
-            if (strpos($e->getMessage(), "Stack with id {$this->stackName} does not exist") !== false) {
-                return false;
-            }
-
-            throw $e;
-        }
-    }
 }
