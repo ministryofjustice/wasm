@@ -36,8 +36,8 @@ class HostingStack
         $appAndEnv = $this->getAppNameAndEnvironment();
         $this->appName = $appAndEnv['app'];
         $this->env = $appAndEnv['env'];
-        $this->isActive = $this->getIsActive();
-        $this->isUpdating = $this->getIsUpdating();
+        $this->isActive = $this->isActive();
+        $this->isUpdating = $this->isUpdating();
     }
 
     protected function getAppNameAndEnvironment()
@@ -54,7 +54,7 @@ class HostingStack
     /**
      * @return bool
      */
-    protected function getIsActive()
+    protected function isActive()
     {
         foreach ($this->description['Parameters'] as $param) {
             if ($param['ParameterKey']   == 'Active' &&
@@ -68,7 +68,7 @@ class HostingStack
     /**
      * @return bool
      */
-    protected function getIsUpdating()
+    protected function isUpdating()
     {
         $completeStatuses = [
             'CREATE_COMPLETE',

@@ -15,11 +15,11 @@ class Stacks extends Command
     /**
      * @var HostingStackCollection
      */
-    protected $hostingStackCollection;
+    protected $collection;
 
-    public function __construct(HostingStackCollection $hostingStackCollection)
+    public function __construct(HostingStackCollection $collection)
     {
-        $this->hostingStackCollection = $hostingStackCollection;
+        $this->collection = $collection;
         parent::__construct();
     }
 
@@ -30,9 +30,12 @@ class Stacks extends Command
             ->setDescription('Show the status of hosting stacks in AWS');
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) because we don't use $input, but the parent method defines it
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $stacks = $this->hostingStackCollection->getStacks();
+        $stacks = $this->collection->getStacks();
         $rows = $this->formatTableData($stacks);
         $count = count($rows);
 
@@ -45,7 +48,8 @@ class Stacks extends Command
         $table->render();
     }
 
-    public function formatTableData($stacks) {
+    public function formatTableData($stacks)
+    {
         foreach ($stacks as $stack) {
             if (!isset($apps[$stack->appName])) {
                 $apps[$stack->appName] = [
@@ -59,7 +63,7 @@ class Stacks extends Command
             $status = '<fg=red>Stopped</>';
             if ($stack->isUpdating) {
                 $status = '<fg=blue>Updating</>';
-            } else if ($stack->isActive) {
+            } elseif ($stack->isActive) {
                 $status = '<fg=green>Running</>';
             }
 
