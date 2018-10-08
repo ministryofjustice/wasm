@@ -60,17 +60,23 @@ class Stacks extends Command
                 ];
             }
 
-            $status = '<fg=red>Stopped</>';
-            if ($stack->isUpdating) {
-                $status = '<fg=blue>Updating</>';
-            } elseif ($stack->isActive) {
-                $status = '<fg=green>Running</>';
-            }
-
-            $apps[$stack->appName][$stack->env] = $status;
+            $apps[$stack->appName][$stack->env] = $this->getStackStatus($stack);
         }
 
         ksort($apps);
         return $apps;
+    }
+
+    protected function getStackStatus($stack)
+    {
+        if ($stack->isUpdating) {
+            return '<fg=blue>Updating</>';
+        }
+
+        if ($stack->isActive) {
+            return '<fg=green>Running</>';
+        }
+
+        return '<fg=red>Stopped</>';
     }
 }
