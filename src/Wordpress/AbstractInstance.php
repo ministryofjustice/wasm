@@ -77,13 +77,6 @@ abstract class AbstractInstance
     abstract public function newCommand($command, $dockerOptions = [], ...$options);
 
     /**
-     * Determine if the instance is currently running
-     *
-     * @return bool
-     */
-    abstract public function isRunning();
-
-    /**
      * Export the instance's database to the supplied file handle
      *
      * @param resource $file An open file handle to export to

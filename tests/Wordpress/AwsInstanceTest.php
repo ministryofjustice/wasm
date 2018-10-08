@@ -24,7 +24,6 @@ class AwsInstanceTest extends TestCase
         $aws->ec2Hostname       = 'ec2host.com';
         $aws->dockerContainerId = 'c8a7b8';
         $aws->s3BucketName      = 'example-dev-bucket';
-        $aws->stackIsActive     = true;
 
         $this->instance = new AwsInstance('example', 'dev', $aws);
     }
@@ -147,10 +146,5 @@ class AwsInstanceTest extends TestCase
 
         $actual = $instance->uploadsBaseUrl;
         $this->assertEquals($expected, $actual);
-    }
-
-    public function testIsRunning()
-    {
-        $this->assertEquals(true, $this->instance->isRunning());
     }
 }

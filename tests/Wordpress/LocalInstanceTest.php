@@ -167,42 +167,4 @@ class LocalInstanceTest extends TestCase
         $this->assertEquals($workingDirectory, $process->getWorkingDirectory());
         $this->assertEquals($expectedCommandLine, $process->getCommandLine());
     }
-
-    public function runningStatusProvider()
-    {
-        return [
-            // [ output from docker-compose, running? ]
-            ['c8a7b8', true ],
-            ['',       false],
-        ];
-    }
-
-    /**
-     * @param string $mockOutput Output from docker-compose command
-     * @param bool $expectRunning Expected suject return value
-     *
-     * @dataProvider runningStatusProvider
-     */
-    public function testIsRunning($mockOutput, $expectRunning)
-    {
-        $process = $this->createMock(Process::class);
-        $process->expects($this->once())
-                ->method('mustRun')
-                ->willReturnSelf();
-        $process->expects($this->once())
-                ->method('getOutput')
-                ->willReturn("$mockOutput\n");
-
-        $instance = $this->createPartialMock(
-            LocalInstance::class,
-            ['newProcess']
-        );
-
-        $instance->expects($this->once())
-                 ->method('newProcess')
-                 ->with('docker-compose ps -q wordpress')
-                 ->willReturn($process);
-
-        $this->assertEquals($expectRunning, $instance->isRunning());
-    }
 }
