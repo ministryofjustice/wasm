@@ -50,6 +50,10 @@ class StacksTest extends TestCase
         $this->assertStringStartsWith('| another ', $outputLines[4]);
         $this->assertStringStartsWith('| example ', $outputLines[5]);
         $this->assertStringStartsWith('+---', $outputLines[6]);
+
+        // Assert that the table header row contains the expected columns:
+        // | App Name | Family | Dev | Staging | Production |
+        $this->assertRegExp('/^\| App Name +\| Family +\| Dev +\| Staging +\| Production + \|$/', $outputLines[2]);
     }
 
     public function testFormatTableData() {
@@ -62,12 +66,14 @@ class StacksTest extends TestCase
         // The expected rows exist and contain the correct data
         $this->assertContains([
             'appName' => 'example',
+            'family'  => 'WordPress',
             'dev'     => '<fg=green>Running</>',
             'staging' => '<fg=blue>Updating</>',
             'prod'    => '<fg=green>Running</>',
         ], $actual);
         $this->assertContains([
             'appName' => 'another',
+            'family'  => 'Java',
             'dev'     => '<fg=green>Running</>',
             'staging' => '<fg=red>Stopped</>',
             'prod'    => '<fg=blue>Not Deployed</>',
@@ -90,30 +96,35 @@ class StacksTest extends TestCase
             [
                 'appName'    => 'example',
                 'env'        => 'dev',
+                'family'     => 'WordPress',
                 'isActive'   => true,
                 'isUpdating' => false,
             ],
             [
                 'appName'    => 'example',
                 'env'        => 'staging',
+                'family'     => 'WordPress',
                 'isActive'   => true,
                 'isUpdating' => true,
             ],
             [
                 'appName'    => 'example',
                 'env'        => 'prod',
+                'family'     => 'WordPress',
                 'isActive'   => true,
                 'isUpdating' => false,
             ],
             [
                 'appName'    => 'another',
                 'env'        => 'dev',
+                'family'     => 'Java',
                 'isActive'   => true,
                 'isUpdating' => false,
             ],
             [
                 'appName'    => 'another',
                 'env'        => 'staging',
+                'family'     => 'Java',
                 'isActive'   => false,
                 'isUpdating' => false,
             ],
@@ -123,6 +134,7 @@ class StacksTest extends TestCase
             $mock = $this->createMock(HostingStack::class);
             $mock->appName = $stack['appName'];
             $mock->env = $stack['env'];
+            $mock->family = $stack['family'];
             $mock->isActive = $stack['isActive'];
             $mock->isUpdating = $stack['isUpdating'];
             return $mock;

@@ -20,6 +20,11 @@ class HostingStack
     public $env;
 
     /**
+     * @var string
+     */
+    public $family;
+
+    /**
      * @var bool
      */
     public $isActive;
@@ -36,6 +41,7 @@ class HostingStack
         $appAndEnv = $this->getAppNameAndEnvironment();
         $this->appName = $appAndEnv['app'];
         $this->env = $appAndEnv['env'];
+        $this->family = $this->getFamily();
         $this->isActive = $this->isActive();
         $this->isUpdating = $this->isUpdating();
     }
@@ -51,18 +57,44 @@ class HostingStack
         ];
     }
 
+    protected function getFamily()
+    {
+        $image = $this->param('DockerImage');
+
+        if (strpos($image, '/wp/')) {
+            return 'WordPress';
+        }
+
+        if (strpos($image, '/tp-java/')) {
+            return 'Java';
+        }
+
+        return 'Unknown';
+    }
+
+    /**
+     * Return the value of a parameter with the specified key
+     * null is returned if a no parameter exists with that key
+     *
+     * @param string $key The stack ParameterKey
+     *
+     * @return string|null
+     */
+    protected function param($key)
+    {
+        foreach ($this->description['Parameters'] as $param) {
+            if ($param['ParameterKey'] == $key) {
+                return $param['ParameterValue'];
+            }
+        }
+    }
+
     /**
      * @return bool
      */
     protected function isActive()
     {
-        foreach ($this->description['Parameters'] as $param) {
-            if ($param['ParameterKey']   == 'Active' &&
-                $param['ParameterValue'] == 'true') {
-                return true;
-            }
-        }
-        return false;
+        return ( $this->param('Active') == 'true' );
     }
 
     /**
