@@ -30,12 +30,14 @@ class HostingStackCollectionTest extends TestCase
                 'env' => 'dev',
                 'isActive' => true,
                 'isUpdating' => false,
+                'family' => 'WordPress',
             ],
             [
                 'appName' => 'example',
                 'env' => 'staging',
                 'isActive' => true,
                 'isUpdating' => false,
+                'family' => 'WordPress',
             ],
         ];
 
@@ -62,6 +64,10 @@ class HostingStackCollectionTest extends TestCase
                         'ParameterKey' => 'Environment',
                         'ParameterValue' => 'development',
                     ],
+                    [
+                        'ParameterKey' => 'DockerImage',
+                        'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
+                    ],
                 ],
                 'StackStatus' => 'UPDATE_COMPLETE',
             ],
@@ -80,6 +86,10 @@ class HostingStackCollectionTest extends TestCase
                     [
                         'ParameterKey' => 'Environment',
                         'ParameterValue' => 'staging',
+                    ],
+                    [
+                        'ParameterKey' => 'DockerImage',
+                        'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
                     ],
                 ],
                 'StackStatus' => 'UPDATE_COMPLETE',

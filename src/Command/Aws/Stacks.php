@@ -8,6 +8,7 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use WpEcs\Aws\AppStatusMatrix;
+use WpEcs\Aws\HostingStack;
 use WpEcs\Aws\HostingStackCollection;
 
 class Stacks extends Command
@@ -43,17 +44,23 @@ class Stacks extends Command
 
         $table = new Table($output);
         $table
-            ->setHeaders(['App Name', 'Dev', 'Staging', 'Production'])
+            ->setHeaders(['App Name', 'Family', 'Dev', 'Staging', 'Production'])
             ->setRows($rows);
         $table->render();
     }
 
+    /**
+     * @param HostingStack[] $stacks
+     *
+     * @return array
+     */
     public function formatTableData($stacks)
     {
         foreach ($stacks as $stack) {
             if (!isset($apps[$stack->appName])) {
                 $apps[$stack->appName] = [
                     'appName' => $stack->appName,
+                    'family'  => $stack->family,
                     'dev'     => '<fg=blue>Not Deployed</>',
                     'staging' => '<fg=blue>Not Deployed</>',
                     'prod'    => '<fg=blue>Not Deployed</>',
@@ -67,6 +74,11 @@ class Stacks extends Command
         return $apps;
     }
 
+    /**
+     * @param HostingStack $stack
+     *
+     * @return string
+     */
     protected function getStackStatus($stack)
     {
         if ($stack->isUpdating) {

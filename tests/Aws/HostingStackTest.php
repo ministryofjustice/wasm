@@ -42,6 +42,10 @@ class HostingStackTest extends TestCase
                     'ParameterKey' => 'Environment',
                     'ParameterValue' => 'development',
                 ],
+                [
+                    'ParameterKey' => 'DockerImage',
+                    'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
+                ],
             ],
             'StackStatus' => 'UPDATE_COMPLETE',
             // Some response fields omitted for brevity
@@ -71,6 +75,10 @@ class HostingStackTest extends TestCase
                     'ParameterKey' => 'Environment',
                     'ParameterValue' => 'development',
                 ],
+                [
+                    'ParameterKey' => 'DockerImage',
+                    'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
+                ],
             ],
             'StackStatus' => 'UPDATE_COMPLETE',
             // Some response fields omitted for brevity
@@ -99,6 +107,10 @@ class HostingStackTest extends TestCase
                 [
                     'ParameterKey' => 'Environment',
                     'ParameterValue' => 'development',
+                ],
+                [
+                    'ParameterKey' => 'DockerImage',
+                    'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
                 ],
             ],
             'StackStatus' => 'UPDATE_COMPLETE',
@@ -146,6 +158,10 @@ class HostingStackTest extends TestCase
                     'ParameterKey' => 'Environment',
                     'ParameterValue' => 'development',
                 ],
+                [
+                    'ParameterKey' => 'DockerImage',
+                    'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
+                ],
             ],
             'StackStatus' => $status,
             // Some response fields omitted for brevity
@@ -155,5 +171,57 @@ class HostingStackTest extends TestCase
 
         $this->assertEquals(true, $stack->isActive);
         $this->assertEquals($expect, $stack->isUpdating);
+    }
+
+    public function stackFamilyDataProvider()
+    {
+        return [
+            // [ docker image uri, app family ]
+            ['000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200', 'WordPress'],
+            ['000000000000.dkr.ecr.eu-west-2.amazonaws.com/tp-java/example:2c72c28-201810091200', 'Java'],
+            ['000000000000.dkr.ecr.eu-west-2.amazonaws.com/example:2c72c28-201810091200', 'Unknown'],
+            [false, 'Unknown'],
+        ];
+    }
+
+    /**
+     * @param string $dockerImage The stack's docker image URI
+     * @param string $expect Expected value for $stack->family
+     *
+     * @dataProvider stackFamilyDataProvider
+     */
+    public function testStackFamily($dockerImage, $expect)
+    {
+        $stackDescription = [
+            'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName' => 'example-dev',
+            'Parameters' => [
+                [
+                    'ParameterKey' => 'AppName',
+                    'ParameterValue' => 'example',
+                ],
+                [
+                    'ParameterKey' => 'Active',
+                    'ParameterValue' => 'true',
+                ],
+                [
+                    'ParameterKey' => 'Environment',
+                    'ParameterValue' => 'development',
+                ],
+            ],
+            'StackStatus' => 'UPDATE_COMPLETE',
+            // Some response fields omitted for brevity
+        ];
+
+        if ($dockerImage) {
+            $stackDescription['Parameters'][] = [
+                'ParameterKey' => 'DockerImage',
+                'ParameterValue' => $dockerImage,
+            ];
+        }
+
+        $stack = new HostingStack($stackDescription);
+
+        $this->assertEquals($expect, $stack->family);
     }
 }
