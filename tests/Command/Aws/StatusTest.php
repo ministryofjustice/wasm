@@ -9,9 +9,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Console\Tests\Helper\TableTest;
 use WpEcs\Aws\HostingStack;
 use WpEcs\Aws\HostingStackCollection;
-use WpEcs\Command\Aws\Stacks;
+use WpEcs\Command\Aws\Status;
 
-class StacksTest extends TestCase
+class StatusTest extends TestCase
 {
     /**
      * @var Command
@@ -21,14 +21,14 @@ class StacksTest extends TestCase
     public function setUp()
     {
         $application = new Application();
-        $command = new Stacks($this->mockHostingStackCollection());
+        $command = new Status($this->mockHostingStackCollection());
         $application->add($command);
-        $this->command = $application->find('aws:stacks');
+        $this->command = $application->find('aws:status');
     }
 
     public function testConfigure()
     {
-        $this->assertInstanceOf(Stacks::class, $this->command);
+        $this->assertInstanceOf(Status::class, $this->command);
     }
 
     public function testExecute()
