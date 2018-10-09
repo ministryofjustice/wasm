@@ -2,16 +2,14 @@
 
 namespace WpEcs\Command\Aws;
 
-use Aws\CloudFormation\CloudFormationClient;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use WpEcs\Aws\AppStatusMatrix;
 use WpEcs\Aws\HostingStack;
 use WpEcs\Aws\HostingStackCollection;
 
-class Stacks extends Command
+class Status extends Command
 {
     /**
      * @var HostingStackCollection
@@ -27,7 +25,7 @@ class Stacks extends Command
     protected function configure()
     {
         $this
-            ->setName('aws:stacks')
+            ->setName('aws:status')
             ->setDescription('Show the status of hosting stacks in AWS');
     }
 

@@ -48,6 +48,6 @@ $app->addCommands([
     new Db\Export($instanceFactory),
     new Db\Import($instanceFactory),
     new Migrate($instanceFactory),
-    new Aws\Stacks($hostingStackCollection),
+    new Aws\Status($hostingStackCollection),
 ]);
 $app->run();
