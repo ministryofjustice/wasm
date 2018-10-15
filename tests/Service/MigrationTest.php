@@ -262,6 +262,7 @@ class MigrationTest extends TestCase
         $process = $migration->newProcess('command to run');
         $this->assertInstanceOf(Process::class, $process);
         $this->assertEquals('command to run', $process->getCommandLine());
+        $this->assertNull($process->getTimeout());
     }
 
     public function testBeginStepNormal()

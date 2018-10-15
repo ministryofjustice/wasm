@@ -213,6 +213,8 @@ class Migration
 
     public function newProcess($command)
     {
-        return new Process($command);
+        $process = new Process($command);
+        $process->setTimeout(null);
+        return $process;
     }
 }
