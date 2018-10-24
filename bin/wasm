@@ -49,5 +49,7 @@ $app->addCommands([
     new Db\Import($instanceFactory),
     new Migrate($instanceFactory),
     new Aws\Status($hostingStackCollection),
+    new Aws\Start($hostingStackCollection),
+    new Aws\Stop($hostingStackCollection),
 ]);
 $app->run();
