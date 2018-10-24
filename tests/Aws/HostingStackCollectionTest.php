@@ -14,30 +14,30 @@ class HostingStackCollectionTest extends TestCase
         $collection = new HostingStackCollection(
             $this->mockCloudFormationClient()
         );
-        $stacks = $collection->getStacks();
+        $stacks     = $collection->getStacks();
 
         $this->assertCount(count($this->validHostingStackDescriptions()), $stacks);
         $this->assertContainsOnlyInstancesOf(HostingStack::class, $stacks);
 
         // Convert HostingStack objects into arrays so we can easily assert their values
-        $actualValues = array_map(function($stack) {
+        $actualValues = array_map(function ($stack) {
             return json_decode(json_encode($stack), true);
         }, $stacks);
 
         $expectedValues = [
             [
-                'appName' => 'example',
-                'env' => 'dev',
-                'isActive' => true,
+                'appName'    => 'example',
+                'env'        => 'dev',
+                'isActive'   => true,
                 'isUpdating' => false,
-                'family' => 'WordPress',
+                'family'     => 'WordPress',
             ],
             [
-                'appName' => 'example',
-                'env' => 'staging',
-                'isActive' => true,
+                'appName'    => 'example',
+                'env'        => 'staging',
+                'isActive'   => true,
                 'isUpdating' => false,
-                'family' => 'WordPress',
+                'family'     => 'WordPress',
             ],
         ];
 

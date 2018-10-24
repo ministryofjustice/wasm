@@ -28,7 +28,7 @@ class HostingStackCollection
         }
 
         return array_map(function ($stack) {
-            return new HostingStack($stack);
+            return new HostingStack($stack, $this->cloudformation);
         }, $stacks);
     }
 
