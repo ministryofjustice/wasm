@@ -46,6 +46,87 @@ class HostingStackCollectionTest extends TestCase
         }
     }
 
+    public function testGetStackValid()
+    {
+        $cloudformation = $this->createPartialMock(
+            CloudFormationClient::class,
+            ['describeStacks']
+        );
+        $cloudformation->expects($this->once())
+                       ->method('describeStacks')
+                       ->with(['StackName' => 'example-dev'])
+                       ->willReturn([
+                           'Stacks' => [
+                               [
+                                   'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+                                   'StackName' => 'example-dev',
+                                   'Parameters' => [
+                                       [
+                                           'ParameterKey' => 'AppName',
+                                           'ParameterValue' => 'example',
+                                       ],
+                                       [
+                                           'ParameterKey' => 'Active',
+                                           'ParameterValue' => 'true',
+                                       ],
+                                       [
+                                           'ParameterKey' => 'Environment',
+                                           'ParameterValue' => 'development',
+                                       ],
+                                       [
+                                           'ParameterKey' => 'DockerImage',
+                                           'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
+                                       ],
+                                   ],
+                                   'StackStatus' => 'UPDATE_COMPLETE',
+                               ],
+                           ],
+                       ]);
+
+        $collection = new HostingStackCollection($cloudformation);
+        $stack = $collection->getStack('example-dev');
+
+        $this->assertInstanceOf(HostingStack::class, $stack);
+        $this->assertEquals('example', $stack->appName);
+        $this->assertEquals('dev', $stack->env);
+    }
+
+    public function testGetStackInvalid()
+    {
+        $cloudformation = $this->createPartialMock(
+            CloudFormationClient::class,
+            ['describeStacks']
+        );
+        $cloudformation->expects($this->once())
+                       ->method('describeStacks')
+                       ->with(['StackName' => 'some-other-stack'])
+                       ->willReturn([
+                           'Stacks' => [
+                               [
+                                   'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/some-other-stack/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+                                   'StackName' => 'some-other-stack',
+                                   'Parameters' => [
+                                       [
+                                           'ParameterKey' => 'SomeParameter',
+                                           'ParameterValue' => 'some value',
+                                       ],
+                                       [
+                                           'ParameterKey' => 'SomeOtherParameter',
+                                           'ParameterValue' => 'another value',
+                                       ],
+                                   ],
+                                   'StackStatus' => 'CREATE_COMPLETE',
+                               ],
+                           ],
+                       ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('This is not a hosting stack');
+
+        $collection = new HostingStackCollection($cloudformation);
+        $collection->getStack('some-other-stack');
+    }
+
     protected function validHostingStackDescriptions() {
         return [
             [

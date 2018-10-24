@@ -32,6 +32,23 @@ class HostingStackCollection
         }, $stacks);
     }
 
+    /**
+     * @param string $stackName Name of the CloudFormation stack
+     * @return HostingStack
+     * @throws \Exception
+     */
+    public function getStack($stackName)
+    {
+        $results = $this->cloudformation->describeStacks([
+            'StackName' => $stackName,
+        ]);
+        $stack = $results['Stacks'][0];
+        if (!$this->isHostingStack($stack)) {
+            throw new \Exception('This is not a hosting stack');
+        }
+        return new HostingStack($stack, $this->cloudformation);
+    }
+
     protected function isHostingStack($description)
     {
         // If the stack name doesn't end with "dev", "staging" or "prod", it's not a hosting stack
