@@ -2,6 +2,7 @@
 
 namespace WpEcs\Tests\Aws;
 
+use Aws\CloudFormation\CloudFormationClient;
 use PHPUnit\Framework\TestCase;
 use WpEcs\Aws\HostingStack;
 
@@ -10,10 +11,10 @@ class HostingStackTest extends TestCase
     public function stackNameDataProvider()
     {
         return [
-            ['example-dev',     'example',  'dev'    ],
-            ['example-staging', 'example',  'staging'],
-            ['example-prod',    'example',  'prod'   ],
-            ['example2-dev',    'example2', 'dev'    ],
+            ['example-dev', 'example', 'dev'],
+            ['example-staging', 'example', 'staging'],
+            ['example-prod', 'example', 'prod'],
+            ['example2-dev', 'example2', 'dev'],
         ];
     }
 
@@ -27,23 +28,23 @@ class HostingStackTest extends TestCase
     public function testAppNameAndEnv($stackName, $expectedAppName, $expectedEnv)
     {
         $stackDescription = [
-            'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-            'StackName' => $stackName,
-            'Parameters' => [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => $stackName,
+            'Parameters'  => [
                 [
-                    'ParameterKey' => 'AppName',
+                    'ParameterKey'   => 'AppName',
                     'ParameterValue' => 'example',
                 ],
                 [
-                    'ParameterKey' => 'Active',
+                    'ParameterKey'   => 'Active',
                     'ParameterValue' => 'true',
                 ],
                 [
-                    'ParameterKey' => 'Environment',
+                    'ParameterKey'   => 'Environment',
                     'ParameterValue' => 'development',
                 ],
                 [
-                    'ParameterKey' => 'DockerImage',
+                    'ParameterKey'   => 'DockerImage',
                     'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
                 ],
             ],
@@ -51,7 +52,7 @@ class HostingStackTest extends TestCase
             // Some response fields omitted for brevity
         ];
 
-        $stack = new HostingStack($stackDescription);
+        $stack = new HostingStack($stackDescription, $this->mockCloudFormationClient());
 
         $this->assertEquals($expectedAppName, $stack->appName);
         $this->assertEquals($expectedEnv, $stack->env);
@@ -60,23 +61,23 @@ class HostingStackTest extends TestCase
     public function testAnActiveStack()
     {
         $stackDescription = [
-            'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-            'StackName' => 'example-dev',
-            'Parameters' => [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => 'example-dev',
+            'Parameters'  => [
                 [
-                    'ParameterKey' => 'AppName',
+                    'ParameterKey'   => 'AppName',
                     'ParameterValue' => 'example',
                 ],
                 [
-                    'ParameterKey' => 'Active',
+                    'ParameterKey'   => 'Active',
                     'ParameterValue' => 'true',
                 ],
                 [
-                    'ParameterKey' => 'Environment',
+                    'ParameterKey'   => 'Environment',
                     'ParameterValue' => 'development',
                 ],
                 [
-                    'ParameterKey' => 'DockerImage',
+                    'ParameterKey'   => 'DockerImage',
                     'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
                 ],
             ],
@@ -84,7 +85,7 @@ class HostingStackTest extends TestCase
             // Some response fields omitted for brevity
         ];
 
-        $stack = new HostingStack($stackDescription);
+        $stack = new HostingStack($stackDescription, $this->mockCloudFormationClient());
 
         $this->assertEquals(true, $stack->isActive);
         $this->assertEquals(false, $stack->isUpdating);
@@ -93,23 +94,23 @@ class HostingStackTest extends TestCase
     public function testAnInactiveStack()
     {
         $stackDescription = [
-            'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-            'StackName' => 'example-dev',
-            'Parameters' => [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => 'example-dev',
+            'Parameters'  => [
                 [
-                    'ParameterKey' => 'AppName',
+                    'ParameterKey'   => 'AppName',
                     'ParameterValue' => 'example',
                 ],
                 [
-                    'ParameterKey' => 'Active',
+                    'ParameterKey'   => 'Active',
                     'ParameterValue' => 'false',
                 ],
                 [
-                    'ParameterKey' => 'Environment',
+                    'ParameterKey'   => 'Environment',
                     'ParameterValue' => 'development',
                 ],
                 [
-                    'ParameterKey' => 'DockerImage',
+                    'ParameterKey'   => 'DockerImage',
                     'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
                 ],
             ],
@@ -117,7 +118,7 @@ class HostingStackTest extends TestCase
             // Some response fields omitted for brevity
         ];
 
-        $stack = new HostingStack($stackDescription);
+        $stack = new HostingStack($stackDescription, $this->mockCloudFormationClient());
 
         $this->assertEquals(false, $stack->isActive);
         $this->assertEquals(false, $stack->isUpdating);
@@ -127,10 +128,10 @@ class HostingStackTest extends TestCase
     {
         return [
             // [ stack status, is updating? ]
-            ['CREATE_IN_PROGRESS', true ],
-            ['UPDATE_IN_PROGRESS', true ],
-            ['CREATE_COMPLETE',    false],
-            ['UPDATE_COMPLETE',    false],
+            ['CREATE_IN_PROGRESS', true],
+            ['UPDATE_IN_PROGRESS', true],
+            ['CREATE_COMPLETE', false],
+            ['UPDATE_COMPLETE', false],
         ];
     }
 
@@ -143,23 +144,23 @@ class HostingStackTest extends TestCase
     public function testStackIsUpdating($status, $expect)
     {
         $stackDescription = [
-            'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-            'StackName' => 'example-dev',
-            'Parameters' => [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => 'example-dev',
+            'Parameters'  => [
                 [
-                    'ParameterKey' => 'AppName',
+                    'ParameterKey'   => 'AppName',
                     'ParameterValue' => 'example',
                 ],
                 [
-                    'ParameterKey' => 'Active',
+                    'ParameterKey'   => 'Active',
                     'ParameterValue' => 'true',
                 ],
                 [
-                    'ParameterKey' => 'Environment',
+                    'ParameterKey'   => 'Environment',
                     'ParameterValue' => 'development',
                 ],
                 [
-                    'ParameterKey' => 'DockerImage',
+                    'ParameterKey'   => 'DockerImage',
                     'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
                 ],
             ],
@@ -167,7 +168,7 @@ class HostingStackTest extends TestCase
             // Some response fields omitted for brevity
         ];
 
-        $stack = new HostingStack($stackDescription);
+        $stack = new HostingStack($stackDescription, $this->mockCloudFormationClient());
 
         $this->assertEquals(true, $stack->isActive);
         $this->assertEquals($expect, $stack->isUpdating);
@@ -193,19 +194,19 @@ class HostingStackTest extends TestCase
     public function testStackFamily($dockerImage, $expect)
     {
         $stackDescription = [
-            'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-            'StackName' => 'example-dev',
-            'Parameters' => [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => 'example-dev',
+            'Parameters'  => [
                 [
-                    'ParameterKey' => 'AppName',
+                    'ParameterKey'   => 'AppName',
                     'ParameterValue' => 'example',
                 ],
                 [
-                    'ParameterKey' => 'Active',
+                    'ParameterKey'   => 'Active',
                     'ParameterValue' => 'true',
                 ],
                 [
-                    'ParameterKey' => 'Environment',
+                    'ParameterKey'   => 'Environment',
                     'ParameterValue' => 'development',
                 ],
             ],
@@ -215,13 +216,206 @@ class HostingStackTest extends TestCase
 
         if ($dockerImage) {
             $stackDescription['Parameters'][] = [
-                'ParameterKey' => 'DockerImage',
+                'ParameterKey'   => 'DockerImage',
                 'ParameterValue' => $dockerImage,
             ];
         }
 
-        $stack = new HostingStack($stackDescription);
+        $stack = new HostingStack($stackDescription, $this->mockCloudFormationClient());
 
         $this->assertEquals($expect, $stack->family);
+    }
+
+    public function testStart()
+    {
+        $stackDescription = [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => 'example-dev',
+            'Parameters'  => [
+                [
+                    'ParameterKey'   => 'AppName',
+                    'ParameterValue' => 'example',
+                ],
+                [
+                    'ParameterKey'   => 'Active',
+                    'ParameterValue' => 'false',
+                ],
+                [
+                    'ParameterKey'   => 'Environment',
+                    'ParameterValue' => 'development',
+                ],
+            ],
+            'StackStatus' => 'UPDATE_COMPLETE',
+            // Some response fields omitted for brevity
+        ];
+
+        $cloudformation = $this->createPartialMock(
+            CloudFormationClient::class,
+            ['updateStack']
+        );
+
+        $cloudformation->expects($this->once())
+                       ->method('updateStack')
+                       ->with([
+                           'StackName'           => 'example-dev',
+                           'UsePreviousTemplate' => true,
+                           'Capabilities'        => ['CAPABILITY_IAM'],
+                           'Parameters'          => [
+                               [
+                                   'ParameterKey'     => 'AppName',
+                                   'UsePreviousValue' => true,
+                               ],
+                               [
+                                   'ParameterKey'   => 'Active',
+                                   'ParameterValue' => 'true',
+                               ],
+                               [
+                                   'ParameterKey'     => 'Environment',
+                                   'UsePreviousValue' => true,
+                               ],
+                           ],
+                       ]);
+
+        $stack = new HostingStack($stackDescription, $cloudformation);
+
+        $stack->start();
+    }
+
+    public function testStop()
+    {
+        $stackDescription = [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => 'example-dev',
+            'Parameters'  => [
+                [
+                    'ParameterKey'   => 'AppName',
+                    'ParameterValue' => 'example',
+                ],
+                [
+                    'ParameterKey'   => 'Active',
+                    'ParameterValue' => 'true',
+                ],
+                [
+                    'ParameterKey'   => 'Environment',
+                    'ParameterValue' => 'development',
+                ],
+            ],
+            'StackStatus' => 'UPDATE_COMPLETE',
+            // Some response fields omitted for brevity
+        ];
+
+        $cloudformation = $this->createPartialMock(
+            CloudFormationClient::class,
+            ['updateStack']
+        );
+
+        $cloudformation->expects($this->once())
+                       ->method('updateStack')
+                       ->with([
+                           'StackName'           => 'example-dev',
+                           'UsePreviousTemplate' => true,
+                           'Capabilities'        => ['CAPABILITY_IAM'],
+                           'Parameters'          => [
+                               [
+                                   'ParameterKey'     => 'AppName',
+                                   'UsePreviousValue' => true,
+                               ],
+                               [
+                                   'ParameterKey'   => 'Active',
+                                   'ParameterValue' => 'false',
+                               ],
+                               [
+                                   'ParameterKey'     => 'Environment',
+                                   'UsePreviousValue' => true,
+                               ],
+                           ],
+                       ]);
+
+        $stack = new HostingStack($stackDescription, $cloudformation);
+
+        $stack->stop();
+    }
+
+    public function testStartAnAlreadyRunningStack()
+    {
+        $stackDescription = [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => 'example-dev',
+            'Parameters'  => [
+                [
+                    'ParameterKey'   => 'AppName',
+                    'ParameterValue' => 'example',
+                ],
+                [
+                    'ParameterKey'   => 'Active',
+                    'ParameterValue' => 'true',
+                ],
+                [
+                    'ParameterKey'   => 'Environment',
+                    'ParameterValue' => 'development',
+                ],
+            ],
+            'StackStatus' => 'UPDATE_COMPLETE',
+            // Some response fields omitted for brevity
+        ];
+
+        $cloudformation = $this->createPartialMock(
+            CloudFormationClient::class,
+            ['updateStack']
+        );
+
+        $cloudformation->expects($this->never())
+                       ->method('updateStack');
+
+        $stack = new HostingStack($stackDescription, $cloudformation);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('This stack is already running');
+
+        $stack->start();
+    }
+
+    public function testStopAnAlreadyStoppedStack()
+    {
+        $stackDescription = [
+            'StackId'     => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+            'StackName'   => 'example-dev',
+            'Parameters'  => [
+                [
+                    'ParameterKey'   => 'AppName',
+                    'ParameterValue' => 'example',
+                ],
+                [
+                    'ParameterKey'   => 'Active',
+                    'ParameterValue' => 'false',
+                ],
+                [
+                    'ParameterKey'   => 'Environment',
+                    'ParameterValue' => 'development',
+                ],
+            ],
+            'StackStatus' => 'UPDATE_COMPLETE',
+            // Some response fields omitted for brevity
+        ];
+
+        $cloudformation = $this->createPartialMock(
+            CloudFormationClient::class,
+            ['updateStack']
+        );
+
+        $cloudformation->expects($this->never())
+                       ->method('updateStack');
+
+        $stack = new HostingStack($stackDescription, $cloudformation);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('This stack is already stopped');
+
+        $stack->stop();
+    }
+
+    protected function mockCloudFormationClient()
+    {
+        return $this->createMock(CloudFormationClient::class);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace WpEcs\Aws;
 
+use Aws\CloudFormation\CloudFormationClient;
+
 class HostingStack
 {
     /**
@@ -34,15 +36,21 @@ class HostingStack
      */
     public $isUpdating;
 
-    public function __construct($description)
-    {
-        $this->description = $description;
+    /**
+     * @var CloudFormationClient
+     */
+    protected $cloudformation;
 
-        $appAndEnv = $this->getAppNameAndEnvironment();
-        $this->appName = $appAndEnv['app'];
-        $this->env = $appAndEnv['env'];
-        $this->family = $this->getFamily();
-        $this->isActive = $this->isActive();
+    public function __construct($description, CloudFormationClient $cloudformation)
+    {
+        $this->description    = $description;
+        $this->cloudformation = $cloudformation;
+
+        $appAndEnv        = $this->getAppNameAndEnvironment();
+        $this->appName    = $appAndEnv['app'];
+        $this->env        = $appAndEnv['env'];
+        $this->family     = $this->getFamily();
+        $this->isActive   = $this->isActive();
         $this->isUpdating = $this->isUpdating();
     }
 
@@ -94,7 +102,7 @@ class HostingStack
      */
     protected function isActive()
     {
-        return ( $this->param('Active') == 'true' );
+        return ($this->param('Active') == 'true');
     }
 
     /**
@@ -107,6 +115,55 @@ class HostingStack
             'UPDATE_COMPLETE',
             'ROLLBACK_COMPLETE',
         ];
+
         return !in_array($this->description['StackStatus'], $completeStatuses);
+    }
+
+    public function start()
+    {
+        if ($this->isActive) {
+            throw new \Exception('This stack is already running');
+        }
+
+        $this->setActiveParameterValue('true');
+    }
+
+    public function stop()
+    {
+        if (!$this->isActive) {
+            throw new \Exception('This stack is already stopped');
+        }
+
+        $this->setActiveParameterValue('false');
+    }
+
+    /**
+     * Set the value for the 'Active' parameter on the stack.
+     * This will perform an update of the CloudFormation stack.
+     *
+     * @param string $value
+     */
+    protected function setActiveParameterValue($value)
+    {
+        $params = array_map(function ($param) use ($value) {
+            if ($param['ParameterKey'] == 'Active') {
+                return [
+                    'ParameterKey'   => $param['ParameterKey'],
+                    'ParameterValue' => $value,
+                ];
+            }
+
+            return [
+                'ParameterKey'     => $param['ParameterKey'],
+                'UsePreviousValue' => true,
+            ];
+        }, $this->description['Parameters']);
+
+        $this->cloudformation->updateStack([
+            'StackName'           => $this->description['StackName'],
+            'UsePreviousTemplate' => true,
+            'Capabilities'        => ['CAPABILITY_IAM'],
+            'Parameters'          => $params,
+        ]);
     }
 }
