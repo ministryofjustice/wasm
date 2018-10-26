@@ -6,7 +6,6 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Console\Tests\Helper\TableTest;
 use WpEcs\Aws\HostingStack;
 use WpEcs\Aws\HostingStackCollection;
 use WpEcs\Command\Aws\Status;

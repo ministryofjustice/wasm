@@ -35,9 +35,12 @@ class Start extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $stackName = $this->getStackName($input->getArgument('instance'));
-        $stack = $this->collection->getStack($stackName);
+        $instanceIdentifier = $input->getArgument('instance');
+        $stack = $this->collection->getStack(
+            $this->getStackName($instanceIdentifier)
+        );
         $stack->start();
+        $output->writeln("<info>Success:</info> <comment>$instanceIdentifier</comment> is starting");
     }
 
     /**
