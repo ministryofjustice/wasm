@@ -227,6 +227,10 @@ class Migration
 
     private function actionNotAllowed()
     {
+        if (gettype($this->dest) === 'object') {
+            return false; // is a local destination, allow it
+        }
+
         return in_array(strstr($this->dest, ':'), [':staging', ':prod']);
     }
 }
