@@ -48,9 +48,10 @@ class Migrate extends Command
             $this->instanceFactory->create($dest),
             $output
         );
-        $migration->migrate();
 
-        $output->writeln("<info>Success:</info> Migrated <comment>$source</comment> to <comment>$dest</comment>");
+        if ($migration->migrate()) {
+            $output->writeln("<info>Success:</info> Migrated <comment>$source</comment> to <comment>$dest</comment>");
+        }
     }
 
     /**

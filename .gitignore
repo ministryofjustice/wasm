@@ -1,2 +1,5 @@
+# editor
+.idea
+
 /vendor/
 /coverage/

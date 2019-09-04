@@ -48,6 +48,11 @@ class Migration
      */
     public function migrate()
     {
+        if ($this->actionNotAllowed()) {
+            $this->output->writeln('Operation cancelled: <comment>$this->dest</comment> is not available for migration. Try using: "<appname>:dev"');
+            return false;
+        }
+
         $this->beginStep('[1/3] Moving database...');
         $this->moveDatabase();
         $this->endStep();
@@ -216,5 +221,10 @@ class Migration
         $process = new Process($command);
         $process->setTimeout(null);
         return $process;
+    }
+
+    private function actionNotAllowed()
+    {
+        return in_array(strstr($this->dest, ':'), [':staging', ':prod']);
     }
 }

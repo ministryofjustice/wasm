@@ -17,18 +17,27 @@ WordPress instances running in this environment are based on the [`mojdigital/wo
 
 Ensure your machine is configured correctly to [meet the requirements](#requirements).
 
+*Note the options for installation in **point 2** below*
+
 1. Add this GitHub repository as a package source for your global composer install:
    
    ```bash
    composer global config repositories.repo-name vcs https://github.com/ministryofjustice/wasm
    ```
+2. Choose one
    
-2. Install `wasm` from the `master` branch:
-   
-   ```bash
-   composer global require ministryofjustice/wasm:dev-master
-   ```
-   
+    1. **Safe**: install `wasm` from the `master-readonly` branch:
+       
+       ```bash
+       composer global require ministryofjustice/wasm:dev-master-readonly
+       ```
+       
+    2. **Here be dragons**: install `wasm` from the `master` branch:
+    
+        ```bash
+        composer global require ministryofjustice/wasm:dev-master
+        ```
+
 3. You should now be able to run `wasm` from any directory and see the list of available commands.
 
 **Note:** If you see an error `wasm: command not found`, it'll likely be because you don't have the composer bin directory in your PATH. Refer to the [composer requirements](#composer) section of this document.
