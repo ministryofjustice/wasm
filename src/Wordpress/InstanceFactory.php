@@ -86,4 +86,9 @@ class InstanceFactory
 
         return $identifier;
     }
+
+    public function actionNotAllowed()
+    {
+        return in_array(strstr($this->source, ':'), ['staging', 'prod']);
+    }
 }

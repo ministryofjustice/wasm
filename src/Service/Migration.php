@@ -44,13 +44,15 @@ class Migration
     }
 
     /**
-     * Perform the migration
+     * Perform the migration, preventing migrations to staging and production
+     * @throws \Exception
      */
     public function migrate()
     {
         if ($this->actionNotAllowed()) {
-            $this->output->writeln('Operation cancelled: <comment>$this->dest</comment> is not available for migration. Try using: "<appname>:dev"');
-            return false;
+            $message = "Operation cancelled: Instance identifier \"$this->dest\" is not valid\n";
+            $message .= 'It must not be targeting production or staging stacks. Please target the development stack only,' . "\n";
+            throw new \Exception($message);
         }
 
         $this->beginStep('[1/3] Moving database...');
