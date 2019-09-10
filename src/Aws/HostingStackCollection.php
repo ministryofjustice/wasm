@@ -3,6 +3,7 @@
 namespace WpEcs\Aws;
 
 use Aws\CloudFormation\CloudFormationClient;
+use Exception;
 
 class HostingStackCollection
 {
@@ -44,15 +45,15 @@ class HostingStackCollection
         ]);
         $stack = $results['Stacks'][0];
         if (!$this->isHostingStack($stack)) {
-            throw new \Exception('This is not a hosting stack');
+            throw new Exception('This is not a hosting stack');
         }
         return new HostingStack($stack, $this->cloudformation);
     }
 
     protected function isHostingStack($description)
     {
-        // If the stack name doesn't end with "dev", "staging" or "prod", it's not a hosting stack
-        if (!preg_match('/^([a-z0-9-]+)\-(dev|staging|prod)$/', $description['StackName'])) {
+        // If the stack name doesn't end with "dev" or "staging", it's not a hosting stack
+        if (!preg_match('/^([a-z0-9-]+)\-(dev|staging)$/', $description['StackName'])) {
             return false;
         }
 

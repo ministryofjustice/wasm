@@ -18,7 +18,7 @@ class StopTest extends TestCase
         $this->assertInstanceOf(Stop::class, $command);
         $definition = $command->getDefinition();
         $this->assertTrue($definition->hasArgument('instance'));
-        $this->assertTrue($definition->hasOption('production'));
+        $this->assertTrue($definition->hasOption('staging'));
         $this->assertEquals(1, $definition->getArgumentRequiredCount());
     }
 
@@ -54,75 +54,12 @@ class StopTest extends TestCase
         ];
     }
 
-    /**
-     * @param $yesString
-     * @dataProvider yesStrings
-     */
-    public function testStopProductionAndAnswerYes($yesString)
-    {
-        $instanceIdentifier = 'example:prod';
-        $stackName = 'example-prod';
-
-        $command = $this->getSubject($stackName, true);
-        $commandTester = new CommandTester($command);
-        $commandTester->setInputs([$yesString]);
-        $commandTester->execute([
-            'instance' => $instanceIdentifier,
-        ]);
-
-        $output = $commandTester->getDisplay();
-        $this->assertContains('Are you sure you want to do that?', $output);
-        $this->assertContains("Success: $instanceIdentifier is being stopped", $output);
-    }
-
     public function noStrings()
     {
         return [
             ['no'],
             ['n'],
         ];
-    }
-
-    /**
-     * @param string $noString
-     * @dataProvider noStrings
-     */
-    public function testStopProductionAndAnswerNo($noString)
-    {
-        $instanceIdentifier = 'example:prod';
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Aborting');
-
-        $command = $this->getSubject(false, false);
-        $commandTester = new CommandTester($command);
-        $commandTester->setInputs([$noString]);
-        $commandTester->execute([
-            'instance' => $instanceIdentifier,
-        ]);
-
-        $output = $commandTester->getDisplay();
-        $this->assertContains('Are you sure you want to do that?', $output);
-    }
-
-    /**
-     * The command should stop a production instance, without interactive prompt,
-     * when called with the `--production` command line option
-     */
-    public function testStopProductionWithCommandLineFlag()
-    {
-        $instanceIdentifier = 'example:prod';
-        $stackName = 'example-prod';
-
-        $command = $this->getSubject($stackName, true);
-        $commandTester = new CommandTester($command);
-        $commandTester->execute([
-            'instance' => $instanceIdentifier,
-            '--production' => true,
-        ]);
-
-        $output = $commandTester->getDisplay();
-        $this->assertContains("Success: $instanceIdentifier is being stopped", $output);
     }
 
     /**

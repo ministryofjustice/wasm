@@ -18,7 +18,7 @@ class AwsInstance extends AbstractInstance
      * WordpressInstance constructor
      *
      * @param string $appName The name of the site, as defined by the stack's `AppName` parameter
-     * @param string $env The environment of the instance: dev|staging|prod
+     * @param string $env The environment of the instance: dev|staging
      * @param AwsResources $aws
      */
     public function __construct($appName, $env, AwsResources $aws)

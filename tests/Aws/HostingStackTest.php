@@ -13,7 +13,6 @@ class HostingStackTest extends TestCase
         return [
             ['example-dev', 'example', 'dev'],
             ['example-staging', 'example', 'staging'],
-            ['example-prod', 'example', 'prod'],
             ['example2-dev', 'example2', 'dev'],
         ];
     }

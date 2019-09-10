@@ -52,7 +52,7 @@ class StatusTest extends TestCase
 
         // Assert that the table header row contains the expected columns:
         // | App Name | Family | Dev | Staging | Production |
-        $this->assertRegExp('/^\| App Name +\| Family +\| Dev +\| Staging +\| Production + \|$/', $outputLines[2]);
+        $this->assertRegExp('/^\| App Name +\| Family +\| Dev +\| Staging + \|$/', $outputLines[2]);
     }
 
     public function testFormatTableData() {
@@ -68,14 +68,12 @@ class StatusTest extends TestCase
             'family'  => 'WordPress',
             'dev'     => '<fg=green>Running</>',
             'staging' => '<fg=blue>Updating</>',
-            'prod'    => '<fg=green>Running</>',
         ], $actual);
         $this->assertContains([
             'appName' => 'another',
             'family'  => 'Java',
             'dev'     => '<fg=green>Running</>',
             'staging' => '<fg=red>Stopped</>',
-            'prod'    => '<fg=blue>Not Deployed</>',
         ], $actual);
 
         // Rows are sorted alphabetically by application name (which is the key)
@@ -105,13 +103,6 @@ class StatusTest extends TestCase
                 'family'     => 'WordPress',
                 'isActive'   => true,
                 'isUpdating' => true,
-            ],
-            [
-                'appName'    => 'example',
-                'env'        => 'prod',
-                'family'     => 'WordPress',
-                'isActive'   => true,
-                'isUpdating' => false,
             ],
             [
                 'appName'    => 'another',

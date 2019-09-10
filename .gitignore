@@ -1,5 +1,7 @@
 # editor
 .idea
 
+.DS_*
+
 /vendor/
 /coverage/

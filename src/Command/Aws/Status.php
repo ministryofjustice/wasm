@@ -42,7 +42,7 @@ class Status extends Command
 
         $table = new Table($output);
         $table
-            ->setHeaders(['App Name', 'Family', 'Dev', 'Staging', 'Production'])
+            ->setHeaders(['App Name', 'Family', 'Dev', 'Staging'])
             ->setRows($rows);
         $table->render();
     }
@@ -61,7 +61,6 @@ class Status extends Command
                     'family'  => $stack->family,
                     'dev'     => '<fg=blue>Not Deployed</>',
                     'staging' => '<fg=blue>Not Deployed</>',
-                    'prod'    => '<fg=blue>Not Deployed</>',
                 ];
             }
 

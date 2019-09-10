@@ -31,21 +31,30 @@ class MigrationTest extends TestCase
             'moveDatabase',
             'rewriteDatabase',
             'syncUploads',
+            'preventIfActionNotAllowed'
         ]);
 
-        $m->expects($this->at(0))->method('beginStep')->with($this->stringContains('Moving database'));
+        $m->expects($this->once())->method('preventIfActionNotAllowed')->willReturn(false);
+
+        $m->expects($this->at(1))->method('beginStep')->with($this->stringContains('Moving database'));
         $m->expects($this->at(1))->method('moveDatabase');
         $m->expects($this->at(2))->method('endStep');
 
-        $m->expects($this->at(3))->method('beginStep')->with($this->stringContains('Rewriting database'));
+        $m->expects($this->at(4))->method('beginStep')->with($this->stringContains('Rewriting database'));
         $m->expects($this->at(4))->method('rewriteDatabase');
         $m->expects($this->at(5))->method('endStep');
 
-        $m->expects($this->at(6))->method('beginStep')->with($this->stringContains('Syncing media uploads'));
+        $m->expects($this->at(7))->method('beginStep')->with($this->stringContains('Syncing media uploads'));
         $m->expects($this->at(7))->method('syncUploads');
         $m->expects($this->at(8))->method('endStep');
 
         $m->migrate();
+    }
+
+    public function testPreventIfActionNotAllowed()
+    {
+        $migration = new Migration($this->mockInstance(), $this->mockInstance(), $this->output);
+        $this->assertFalse($migration->preventIfActionNotAllowed());
     }
 
     public function testMoveDatabase()

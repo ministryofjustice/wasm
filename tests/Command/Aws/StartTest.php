@@ -25,7 +25,6 @@ class StartTest extends TestCase
             // instance identifier, stack name
             ['example:dev',     'example-dev'    ],
             ['example:staging', 'example-staging'],
-            ['example:prod',    'example-prod'   ],
         ];
     }
 

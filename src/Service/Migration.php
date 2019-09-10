@@ -2,11 +2,12 @@
 
 namespace WpEcs\Service;
 
+use WpEcs\Wordpress\AbstractInstance;
+use WpEcs\Wordpress\LocalInstance;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
 use Symfony\Component\Process\Process;
-use WpEcs\Wordpress\AbstractInstance;
-use WpEcs\Wordpress\LocalInstance;
+use Exception;
 
 class Migration
 {
@@ -49,11 +50,7 @@ class Migration
      */
     public function migrate()
     {
-        if ($this->actionNotAllowed()) {
-            $message = "Operation cancelled: Instance identifier \"$this->dest\" is not valid\n";
-            $message .= 'It must not be targeting production or staging stacks. Please target the development stack only,' . "\n";
-            throw new \Exception($message);
-        }
+        $this->preventIfActionNotAllowed();
 
         $this->beginStep('[1/3] Moving database...');
         $this->moveDatabase();
@@ -225,12 +222,18 @@ class Migration
         return $process;
     }
 
-    private function actionNotAllowed()
+    public function preventIfActionNotAllowed()
     {
         if (gettype($this->dest) === 'object') {
             return false; // is a local destination, allow it
         }
 
-        return in_array(strstr($this->dest, ':'), [':staging', ':prod']);
+        if (strstr($this->dest, ':') === ':staging') {
+            $message = "Operation cancelled: Instance identifier \"$this->dest\" is not valid\n";
+            $message .= 'It must not be targeting staging stacks. Please target the development stack for migrate only.' . "\n";
+            throw new Exception($message);
+        }
+
+        return false;
     }
 }

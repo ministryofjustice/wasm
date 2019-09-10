@@ -33,7 +33,7 @@ trait MockInstanceHelper {
         );
         $this->instanceFactory->expects($this->any())
                               ->method('create')
-                              ->with($this->matchesRegularExpression('/^example:(dev|staging|prod)$/'))
+                              ->with($this->matchesRegularExpression('/^example:(dev|staging)$/'))
                               ->willReturn($this->instance);
     }
 }

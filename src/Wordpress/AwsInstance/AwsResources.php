@@ -2,10 +2,11 @@
 
 namespace WpEcs\Wordpress\AwsInstance;
 
-use Aws\CloudFormation\Exception\CloudFormationException;
+//use Aws\CloudFormation\Exception\CloudFormationException;
 use Aws\Sdk;
 use Symfony\Component\Process\Process;
 use WpEcs\Traits\LazyPropertiesTrait;
+use Exception;
 
 /**
  * Class AwsResources
@@ -54,7 +55,7 @@ class AwsResources
         $hostTask = json_decode($hostTask, true);
 
         if (empty($hostTask['Containers'])) {
-            throw new \Exception('There are no containers running on the host for this ECS Task');
+            throw new Exception('There are no containers running on the host for this ECS Task');
         }
 
         foreach ($hostTask['Containers'] as $container) {
@@ -63,7 +64,7 @@ class AwsResources
             }
         }
 
-        throw new \Exception("There is no 'web' container running on the host for this ECS Task");
+        throw new Exception("There is no 'web' container running on the host for this ECS Task");
     }
 
     protected function getEc2Hostname()
@@ -95,10 +96,8 @@ class AwsResources
                 return 'wp-dev';
             case 'staging':
                 return 'wp-staging';
-            case 'prod':
-                return 'wp-production';
             default:
-                throw new \Exception('Bad environment specified');
+                throw new Exception('Bad environment specified');
         }
     }
 

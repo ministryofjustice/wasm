@@ -58,11 +58,6 @@ class AwsResourcesTest extends TestCase
                 'staging',
                 'wp-staging',
             ],
-            [
-                'example',
-                'prod',
-                'wp-production',
-            ],
         ];
     }
 

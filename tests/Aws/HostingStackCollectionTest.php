@@ -199,8 +199,8 @@ class HostingStackCollectionTest extends TestCase
 
             // This stack has the right name, but it's missing all expected parameters
             [
-                'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-prod/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-                'StackName' => 'example-prod',
+                'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-staging/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+                'StackName' => 'example-staging',
                 'Parameters' => [],
                 'StackStatus' => 'UPDATE_COMPLETE',
             ],
@@ -241,8 +241,8 @@ class HostingStackCollectionTest extends TestCase
 
             // This stack has the right name, but is missing the 'Environment' parameter
             [
-                'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/another-prod/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-                'StackName' => 'another-prod',
+                'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/another-staging/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+                'StackName' => 'another-staging',
                 'Parameters' => [
                     [
                         'ParameterKey' => 'AppName',
