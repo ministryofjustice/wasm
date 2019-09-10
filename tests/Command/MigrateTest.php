@@ -87,12 +87,12 @@ class MigrateTest extends TestCase
         // Test 2 : failure
         $this->expectException("Exception");
         $this->expectExceptionCode(100);
+        $this->expectExceptionMessage('Operation cancelled: Instance identifier "staging" is not valid for a migrate destination');
         $commandTester->execute([
             'command'     => $this->command->getName(),
             'source'      => 'example:dev',
             'destination' => 'example:staging',
         ]);
-        $this->expectExceptionMessage('Operation cancelled: Instance identifier "staging" is not valid for a migrate destination');
     }
 
     public function testNewMigration()

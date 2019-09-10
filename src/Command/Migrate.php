@@ -50,7 +50,7 @@ class Migrate extends Command
         $source = $input->getArgument('source');
         $dest   = $input->getArgument('destination');
 
-        $this->preventIfActionNotAllowed($source, $dest);
+        $this->preventIfActionNotAllowed($dest);
 
         $migration = $this->newMigration(
             $this->instanceFactory->create($source),
@@ -93,12 +93,11 @@ class Migrate extends Command
         return new Migration($source, $destination, $output);
     }
 
-    public function preventIfActionNotAllowed($source, $dest)
+    public function preventIfActionNotAllowed($dest)
     {
-        $source = strstr($source, ':') ?? $source;
         $dest = strstr($dest, ':') ?? $dest;
 
-        if (in_array($source, ['.', ':dev']) && $dest === ':staging') {
+        if ($dest === ':staging') {
             $dest = ltrim($dest, ':');
             $message = "Operation cancelled: Instance identifier \"$dest\" is not valid for a migrate destination";
             throw new Exception($message, 100);
