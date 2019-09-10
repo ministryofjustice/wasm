@@ -10,6 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use WpEcs\Service\Migration;
 use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\InstanceFactory;
+use Exception;
 
 class Migrate extends Command
 {
@@ -38,10 +39,18 @@ class Migrate extends Command
             );
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int|void|null
+     * @throws Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $source = $input->getArgument('source');
         $dest   = $input->getArgument('destination');
+
+        $this->preventIfActionNotAllowed($source, $dest);
 
         $migration = $this->newMigration(
             $this->instanceFactory->create($source),
@@ -71,10 +80,10 @@ class Migrate extends Command
 
     /**
      * Proxy function to return a new Migration object
-     * This exists to make the class more testable, since the Migration object becomes mockable
+     * This exists to make the class more testable, since the Migration object becomes mock-able
      *
-     * @param AbstractInstance $from
-     * @param AbstractInstance $to
+     * @param AbstractInstance $source
+     * @param AbstractInstance $destination
      * @param OutputInterface $output
      *
      * @return Migration
@@ -82,5 +91,17 @@ class Migrate extends Command
     public function newMigration(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
     {
         return new Migration($source, $destination, $output);
+    }
+
+    public function preventIfActionNotAllowed($source, $dest)
+    {
+        $source = strstr($source, ':') ?? $source;
+        $dest = strstr($dest, ':') ?? $dest;
+
+        if (in_array($source, ['.', ':dev']) && $dest === ':staging') {
+            $dest = ltrim($dest, ':');
+            $message = "Operation cancelled: Instance identifier \"$dest\" is not valid for a migrate destination";
+            throw new Exception($message, 100);
+        }
     }
 }

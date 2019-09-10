@@ -7,7 +7,6 @@ use WpEcs\Wordpress\LocalInstance;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
 use Symfony\Component\Process\Process;
-use Exception;
 
 class Migration
 {
@@ -50,8 +49,6 @@ class Migration
      */
     public function migrate()
     {
-        $this->preventIfActionNotAllowed();
-
         $this->beginStep('[1/3] Moving database...');
         $this->moveDatabase();
         $this->endStep();
@@ -220,20 +217,5 @@ class Migration
         $process = new Process($command);
         $process->setTimeout(null);
         return $process;
-    }
-
-    public function preventIfActionNotAllowed()
-    {
-        if (gettype($this->dest) === 'object') {
-            return false; // is a local destination, allow it
-        }
-
-        if (strstr($this->dest, ':') === ':staging') {
-            $message = "Operation cancelled: Instance identifier \"$this->dest\" is not valid\n";
-            $message .= 'It must not be targeting staging stacks. Please target the development stack for migrate only.' . "\n";
-            throw new Exception($message);
-        }
-
-        return false;
     }
 }

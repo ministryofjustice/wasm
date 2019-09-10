@@ -18,7 +18,7 @@ class StopTest extends TestCase
         $this->assertInstanceOf(Stop::class, $command);
         $definition = $command->getDefinition();
         $this->assertTrue($definition->hasArgument('instance'));
-        $this->assertTrue($definition->hasOption('staging'));
+        $this->assertTrue($definition->hasOption('production'));
         $this->assertEquals(1, $definition->getArgumentRequiredCount());
     }
 

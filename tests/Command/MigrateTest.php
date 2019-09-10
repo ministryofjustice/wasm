@@ -60,6 +60,7 @@ class MigrateTest extends TestCase
     public function testExecute()
     {
         $migration = $this->createMock(Migration::class);
+
         $migration->expects($this->once())
                   ->method('migrate');
 
@@ -73,14 +74,25 @@ class MigrateTest extends TestCase
                       ->willReturn($migration);
 
         $commandTester = new CommandTester($this->command);
+        // Test 1 : success
+        $commandTester->execute([
+            'command'     => $this->command->getName(),
+            'source'      => 'example:staging',
+            'destination' => 'example:dev',
+        ]);
+
+        $successMessage = 'Success: Migrated example:staging to example:dev';
+        $this->assertContains($successMessage, $commandTester->getDisplay());
+
+        // Test 2 : failure
+        $this->expectException("Exception");
+        $this->expectExceptionCode(100);
         $commandTester->execute([
             'command'     => $this->command->getName(),
             'source'      => 'example:dev',
             'destination' => 'example:staging',
         ]);
-
-        $successMessage = 'Success: Migrated example:dev to example:staging';
-        $this->assertContains($successMessage, $commandTester->getDisplay());
+        $this->expectExceptionMessage('Operation cancelled: Instance identifier "staging" is not valid for a migrate destination');
     }
 
     public function testNewMigration()

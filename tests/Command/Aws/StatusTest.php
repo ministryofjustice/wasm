@@ -51,7 +51,7 @@ class StatusTest extends TestCase
         $this->assertStringStartsWith('+---', $outputLines[6]);
 
         // Assert that the table header row contains the expected columns:
-        // | App Name | Family | Dev | Staging | Production |
+        // | App Name | Family | Dev | Staging |
         $this->assertRegExp('/^\| App Name +\| Family +\| Dev +\| Staging + \|$/', $outputLines[2]);
     }
 
