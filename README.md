@@ -73,8 +73,6 @@ Export the database of a running WordPress instance
 wasm db:export [app-name:env]
 ```
 
-
-
 ## Requirements
 
 - PHP 7.1+
