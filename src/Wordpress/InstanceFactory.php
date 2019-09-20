@@ -4,6 +4,7 @@ namespace WpEcs\Wordpress;
 
 use Aws\Sdk;
 use WpEcs\Wordpress\AwsInstance\AwsResources;
+use Exception;
 
 class InstanceFactory
 {
@@ -14,16 +15,18 @@ class InstanceFactory
      * @param string $identifier
      *
      * @return AbstractInstance
-     * @throws \Exception
+     * @throws Exception
      */
     public function create($identifier)
     {
-        if ($path = $this->localIdentifier($identifier)) {
+        $path = $this->localIdentifier($identifier);
+        if ($path) {
             // This is a local instance identifier
             return new LocalInstance($path);
         }
 
-        if ($awsId = $this->awsIdentifier($identifier)) {
+        $awsId = $this->awsIdentifier($identifier);
+        if ($awsId) {
             // This is an AWS instance identifier
             $sdk = new Sdk([
                 'region'  => 'eu-west-2',
@@ -37,7 +40,7 @@ class InstanceFactory
         $message = "Instance identifier \"$identifier\" is not valid\n";
         $message .= 'It must be in the format "<appname>:<env>" (e.g. "sitename:dev") for an AWS instance,' . "\n";
         $message .= 'or the path to a local instance directory (which must contain a docker-compose.yml file).';
-        throw new \Exception($message);
+        throw new Exception($message);
     }
 
     /**

@@ -38,7 +38,7 @@ class Stop extends Command
                 'production',
                 'p',
                 InputOption::VALUE_NONE,
-                "Don't ask for confirmation before stopping a production instance"
+                "Ask for confirmation before stopping a production instance"
             );
     }
 

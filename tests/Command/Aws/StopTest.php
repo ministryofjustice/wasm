@@ -60,19 +60,16 @@ class StopTest extends TestCase
      */
     public function testStopProductionAndAnswerYes($yesString)
     {
-        $instanceIdentifier = 'example:prod';
-        $stackName = 'example-prod';
-
-        $command = $this->getSubject($stackName, true);
+        $command = $this->getSubject('example-prod', true);
         $commandTester = new CommandTester($command);
         $commandTester->setInputs([$yesString]);
         $commandTester->execute([
-            'instance' => $instanceIdentifier,
+            'instance' => 'example:prod',
         ]);
 
         $output = $commandTester->getDisplay();
         $this->assertContains('Are you sure you want to do that?', $output);
-        $this->assertContains("Success: $instanceIdentifier is being stopped", $output);
+        $this->assertContains("Success: example:prod is being stopped", $output);
     }
 
     public function noStrings()
