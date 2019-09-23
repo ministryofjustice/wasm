@@ -17,7 +17,7 @@ trait ProductionInteractionTrait
      * @var string
      * A message to inform of the specific action that was attempted
      */
-    public $prodInteractMessage = "";
+    public $prodInteractMessage = "Production is protected, please consider your last action.";
 
     /**
      * @var string
