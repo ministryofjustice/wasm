@@ -3,19 +3,20 @@
 namespace WpEcs\Command;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
 use WpEcs\Service\Migration;
+use WpEcs\Traits\ProductionInteractionTrait;
 use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\InstanceFactory;
 
 class Migrate extends Command
 {
+    use ProductionInteractionTrait;
+
     protected $instanceFactory;
 
     public function __construct(InstanceFactory $instanceFactory)
@@ -45,6 +46,9 @@ class Migrate extends Command
                 InputOption::VALUE_NONE,
                 "Ask for confirmation before migrating to a production instance"
             );
+
+        $this->prodInteractArgument = "destination";
+        $this->prodInteractMessage  = "It looks like you're trying to migrate data to a production instance.";
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -91,33 +95,5 @@ class Migrate extends Command
     public function newMigration(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
     {
         return new Migration($source, $destination, $output);
-    }
-
-    /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     */
-    protected function interact(InputInterface $input, OutputInterface $output)
-    {
-        $stackName = $this->getStackName($input->getArgument('destination'));
-
-        if (preg_match('/-prod$/', $stackName) && !$input->getOption('production')) {
-            $output->writeln("<error>You are about to migrate data to a production instance.</error>");
-            $helper = $this->getHelper('question');
-            $question = new ConfirmationQuestion("Are you sure you want to do that? [y/n]\n", false);
-            if (!$helper->ask($input, $output, $question)) {
-                throw new RuntimeException('Aborting');
-            }
-        }
-    }
-
-    /**
-     * @param string $destination
-     *
-     * @return string
-     */
-    protected function getStackName($destination)
-    {
-        return str_replace(':', '-', $destination);
     }
 }

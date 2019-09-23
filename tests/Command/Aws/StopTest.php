@@ -68,6 +68,7 @@ class StopTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
+        $this->assertContains('stop a production instance', $output);
         $this->assertContains('Are you sure you want to do that?', $output);
         $this->assertContains("Success: example:prod is being stopped", $output);
     }

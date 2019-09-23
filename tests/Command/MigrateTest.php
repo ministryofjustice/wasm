@@ -98,35 +98,6 @@ class MigrateTest extends TestCase
         $this->assertInstanceOf(Migration::class, $migration);
     }
 
-    public function noStrings()
-    {
-        return [
-            ['no'],
-            ['n'],
-        ];
-    }
-
-    /**
-     * @param string $noString
-     * @dataProvider noStrings
-     */
-    public function testMigrateProductionAndAnswerNo($noString)
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Aborting');
-
-        $commandTester = new CommandTester($this->command);
-        $commandTester->setInputs([$noString]);
-        $commandTester->execute([
-            'command' => $this->command->getName(),
-            'source' => 'example:dev',
-            'destination' => 'example:prod'
-        ]);
-
-        $output = $commandTester->getDisplay();
-        $this->assertContains('Are you sure you want to do that?', $output);
-    }
-
     public function yesStrings()
     {
         return [
@@ -162,7 +133,34 @@ class MigrateTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
+        $this->assertContains('migrate data to a production instance', $output);
         $this->assertContains('Are you sure you want to do that?', $output);
         $this->assertContains("Success: Migrated example:dev to example:prod", $output);
+    }
+
+    public function noStrings()
+    {
+        return [
+            ['no'],
+            ['n'],
+        ];
+    }
+
+    /**
+     * @param string $noString
+     * @dataProvider noStrings
+     */
+    public function testMigrateProductionAndAnswerNo($noString)
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Aborting');
+
+        $commandTester = new CommandTester($this->command);
+        $commandTester->setInputs([$noString]);
+        $commandTester->execute([
+            'command' => $this->command->getName(),
+            'source' => 'example:dev',
+            'destination' => 'example:prod'
+        ]);
     }
 }

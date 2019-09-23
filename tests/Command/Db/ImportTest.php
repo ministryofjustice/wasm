@@ -9,8 +9,6 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Console\Exception\RuntimeException;
 use WpEcs\Command\Db\Import;
 use WpEcs\Tests\Command\MockInstanceHelper;
-use WpEcs\Aws\HostingStack;
-use WpEcs\Aws\HostingStackCollection;
 
 class ImportTest extends TestCase
 {
@@ -76,7 +74,7 @@ class ImportTest extends TestCase
      * @param $yesString
      * @dataProvider yesStrings
      */
-    public function testStopProductionAndAnswerYes($yesString)
+    public function testImportProductionAndAnswerYes($yesString)
     {
         $vfs = vfsStream::setup('root', null, [
             'database.sql' => 'Database content to import',
@@ -101,6 +99,7 @@ class ImportTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
+        $this->assertContains('import data to a production instance', $output);
         $this->assertContains('Are you sure you want to do that?', $output);
         $this->assertContains("Success: Database imported from $filename", $output);
     }
@@ -143,8 +142,5 @@ class ImportTest extends TestCase
             'instance' => 'example:prod',
             'filename' => $filename
         ]);
-
-        $output = $commandTester->getDisplay();
-        $this->assertContains('Are you sure you want to do that?', $output);
     }
 }
