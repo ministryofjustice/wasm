@@ -8,8 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * A trait to implement lazy-loaded property values.
- * Use this to cache property values which are expensive to calculate and do not change.
+ * A trait to help protect production instances from erroneous commands
  */
 trait ProductionInteractionTrait
 {
