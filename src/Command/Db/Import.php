@@ -4,12 +4,16 @@ namespace WpEcs\Command\Db;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use WpEcs\Traits\ProductionInteractionTrait;
 use WpEcs\Wordpress\InstanceFactory;
 
 class Import extends Command
 {
+    use ProductionInteractionTrait;
+
     protected $instanceFactory;
 
     public function __construct(InstanceFactory $instanceFactory)
@@ -28,7 +32,15 @@ class Import extends Command
                 InputArgument::REQUIRED,
                 'Instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
             )
-            ->addArgument('filename', InputArgument::REQUIRED, 'The SQL file to import');
+            ->addArgument('filename', InputArgument::REQUIRED, 'The SQL file to import')
+            ->addOption(
+                'production',
+                'p',
+                InputOption::VALUE_NONE,
+                "Ask for confirmation before importing data to a production instance"
+            );
+
+        $this->prodInteractMessage = "It looks like you're trying to import data to a production instance.";
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

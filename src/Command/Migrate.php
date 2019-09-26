@@ -5,14 +5,18 @@ namespace WpEcs\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use WpEcs\Service\Migration;
+use WpEcs\Traits\ProductionInteractionTrait;
 use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\InstanceFactory;
 
 class Migrate extends Command
 {
+    use ProductionInteractionTrait;
+
     protected $instanceFactory;
 
     public function __construct(InstanceFactory $instanceFactory)
@@ -35,7 +39,16 @@ class Migrate extends Command
                 'destination',
                 InputArgument::REQUIRED,
                 'Destination instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
+            )
+            ->addOption(
+                'production',
+                'p',
+                InputOption::VALUE_NONE,
+                "Ask for confirmation before migrating to a production instance"
             );
+
+        $this->prodInteractArgument = "destination";
+        $this->prodInteractMessage  = "It looks like you're trying to migrate data to a production instance.";
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -73,8 +86,8 @@ class Migrate extends Command
      * Proxy function to return a new Migration object
      * This exists to make the class more testable, since the Migration object becomes mockable
      *
-     * @param AbstractInstance $from
-     * @param AbstractInstance $to
+     * @param AbstractInstance $source
+     * @param AbstractInstance $destination
      * @param OutputInterface $output
      *
      * @return Migration
