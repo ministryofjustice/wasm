@@ -10,7 +10,7 @@
         "ext-json": "*",
         "symfony/console": "^4.1",
         "aws/aws-sdk-php": "^3.64",
-        "symfony/process": "^4.1"
+        "symfony/process": "^4.4"
     },
     "autoload": {
         "psr-4": {
