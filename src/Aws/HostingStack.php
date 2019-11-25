@@ -3,6 +3,7 @@
 namespace WpEcs\Aws;
 
 use Aws\CloudFormation\CloudFormationClient;
+use Exception;
 
 class HostingStack
 {
@@ -122,7 +123,7 @@ class HostingStack
     public function start()
     {
         if ($this->isActive) {
-            throw new \Exception('This stack is already running');
+            throw new Exception('This stack is already running');
         }
 
         $this->setActiveParameterValue('true');
@@ -131,7 +132,7 @@ class HostingStack
     public function stop()
     {
         if (!$this->isActive) {
-            throw new \Exception('This stack is already stopped');
+            throw new Exception('This stack is already stopped');
         }
 
         $this->setActiveParameterValue('false');

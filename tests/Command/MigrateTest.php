@@ -4,10 +4,11 @@ namespace WpEcs\Tests\Command;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Console\Command\Command;
 use WpEcs\Command\Migrate;
 use WpEcs\Service\Migration;
 use WpEcs\Wordpress\AbstractInstance;
@@ -95,5 +96,71 @@ class MigrateTest extends TestCase
         );
 
         $this->assertInstanceOf(Migration::class, $migration);
+    }
+
+    public function yesStrings()
+    {
+        return [
+            ['yes'],
+            ['y'],
+        ];
+    }
+
+    /**
+     * @param $yesString
+     * @dataProvider yesStrings
+     */
+    public function testMigrationProductionAndAnswerYes($yesString)
+    {
+        $migration = $this->createMock(Migration::class);
+        $migration->expects($this->once())
+            ->method('migrate');
+
+        $this->command->expects($this->once())
+            ->method('newMigration')
+            ->with(
+                $this->isInstanceOf(AbstractInstance::class),
+                $this->isInstanceOf(AbstractInstance::class),
+                $this->isInstanceOf(OutputInterface::class)
+            )
+            ->willReturn($migration);
+
+        $commandTester = new CommandTester($this->command);
+        $commandTester->setInputs([$yesString]);
+        $commandTester->execute([
+            'source' => 'example:dev',
+            'destination' => 'example:prod'
+        ]);
+
+        $output = $commandTester->getDisplay();
+        $this->assertContains('migrate data to a production instance', $output);
+        $this->assertContains('Are you sure you want to do that?', $output);
+        $this->assertContains("Success: Migrated example:dev to example:prod", $output);
+    }
+
+    public function noStrings()
+    {
+        return [
+            ['no'],
+            ['n'],
+        ];
+    }
+
+    /**
+     * @param string $noString
+     * @dataProvider noStrings
+     */
+    public function testMigrateProductionAndAnswerNo($noString)
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Aborting');
+
+        $commandTester = new CommandTester($this->command);
+        $commandTester->setInputs([$noString]);
+        $commandTester->execute([
+            'command' => $this->command->getName(),
+            'source' => 'example:dev',
+            'destination' => 'example:prod'
+        ]);
     }
 }

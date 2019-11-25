@@ -3,6 +3,7 @@
 namespace WpEcs\Aws;
 
 use Aws\CloudFormation\CloudFormationClient;
+use Exception;
 
 class HostingStackCollection
 {
@@ -44,7 +45,7 @@ class HostingStackCollection
         ]);
         $stack = $results['Stacks'][0];
         if (!$this->isHostingStack($stack)) {
-            throw new \Exception('This is not a hosting stack');
+            throw new Exception('This is not a hosting stack');
         }
         return new HostingStack($stack, $this->cloudformation);
     }
