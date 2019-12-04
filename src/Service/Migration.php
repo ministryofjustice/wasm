@@ -214,7 +214,7 @@ class Migration
     public function newProcess($command)
     {
         $process = new Process($command);
-        $process->setTimeout(null);
+        $process->setTimeout(5400); // 90 minutes max for large buckets
         return $process;
     }
 }

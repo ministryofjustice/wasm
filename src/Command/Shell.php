@@ -58,6 +58,7 @@ class Shell extends Command
             ['-t']
         );
         $process->setTty(true);
+        $process->setTimeout(300);
         $process->run();
     }
 }

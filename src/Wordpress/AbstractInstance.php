@@ -109,7 +109,9 @@ abstract class AbstractInstance
             fwrite($file, $buffer);
         };
 
+        $process->setTimeout(300);
         $process->disableOutput();
+
         $process->mustRun($saveOutputStream);
     }
 
@@ -124,6 +126,7 @@ abstract class AbstractInstance
     {
         $process = $this->newCommand('wp --allow-root db import -', ['-i']);
         $process->setInput($file);
+        $process->setTimeout(300);
         $process->mustRun();
     }
 }
