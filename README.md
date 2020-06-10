@@ -20,20 +20,20 @@ Ensure your machine is configured correctly to [meet the requirements](#requirem
 *Note the options for installation in **point 2** below*
 
 1. Add this GitHub repository as a package source for your global composer install:
-   
+
    ```bash
    composer global config repositories.repo-name vcs https://github.com/ministryofjustice/wasm
    ```
 2. Choose one
-   
+
     1. **Safe**: install `wasm` from the `master-readonly` branch:
-       
+
        ```bash
        composer global require ministryofjustice/wasm:dev-master-readonly
        ```
-       
+
     2. **Here be dragons**: install `wasm` from the `master` branch:
-    
+
         ```bash
         composer global require ministryofjustice/wasm:dev-master
         ```
@@ -54,7 +54,24 @@ When run without any additional arguments, a list of available commands will be 
 
 Help for particular commands can be seen by passing the `--help` flag. For example: `wasm migrate --help` will output help documentation for the `migrate` command.
 
-#### AWS Commands
+### Database commands
+Export the database of a running WordPress instance:
+```bash
+wasm db:export [app-name:env]
+```
+
+Import a copy of a database (switch dev for staging or prod if needed):
+```bash
+wasm migrate SITENAME:dev .
+```
+
+Shell into dev, staging and prod sites:
+```bash
+wasm shell sitename:prod
+```
+After running this, you'll then be able to use the [WP-CLI](https://developer.wordpress.org/cli/commands/) commands to do things like create accounts.
+
+### AWS Commands
 Start an AWS hosting stack
 ```bash
 wasm db:start [app-name:env]
@@ -66,11 +83,6 @@ wasm aws:status [app-name:env]
 Stop an AWS hosting stack
 ```bash
 wasm aws:stop [app-name:env]
-```
-#### Database commands
-Export the database of a running WordPress instance
-```bash
-wasm db:export [app-name:env]
 ```
 
 ## Requirements
