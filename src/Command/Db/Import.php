@@ -50,7 +50,7 @@ class Import extends Command
         );
 
         $filename = $input->getArgument('filename');
-        $file     = fopen($filename, 'r');
+        $file = fopen($filename, 'r');
         $instance->importDatabase($file);
         fclose($file);
 

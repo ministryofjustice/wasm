@@ -22,7 +22,7 @@ abstract class AbstractInstance
      * @var array
      */
     protected $envCache = [];
-    
+
     /**
      * A filename-friendly way to identify the instance
      * Does not need to be a valid Instance Identifier
@@ -31,6 +31,13 @@ abstract class AbstractInstance
      * @var string
      */
     public $name;
+
+    /**
+     * Flag to indicate a multisite network instance
+     *
+     * @var boolean
+     */
+    public $isMultisite;
 
     /**
      * Get the value of an environment variable in the container
@@ -43,7 +50,7 @@ abstract class AbstractInstance
     public function env($var)
     {
         if (!isset($this->envCache[$var])) {
-            $value                = $this->execute("printenv $var");
+            $value = $this->execute("printenv $var");
             $this->envCache[$var] = trim($value);
         }
 
@@ -82,11 +89,18 @@ abstract class AbstractInstance
      * @param resource $file An open file handle to export to
      * @param resource|bool $errorOut Error output will be written here
      *
-     * @throws ProcessFailedException if the process didn't exit successfully
      */
     public function exportDatabase($file, $errorOut = STDERR)
     {
-        $process = $this->newCommand('wp --allow-root db export -');
+        $this->detectNetwork();
+
+        $command = 'wp --allow-root db export -';
+
+        if ($this->isMultisite) {
+            $command .= ' --url=' . $this->env('SERVER_NAME');
+        }
+
+        $process = $this->newCommand($command);
 
         /**
          * Callback to process Process output
@@ -109,7 +123,7 @@ abstract class AbstractInstance
             fwrite($file, $buffer);
         };
 
-        $process->setTimeout(300);
+        $process->setTimeout(600); // 10 minutes for large db's
         $process->disableOutput();
 
         $process->mustRun($saveOutputStream);
@@ -119,14 +133,38 @@ abstract class AbstractInstance
      * Import the supplied file handle into the instance's database
      *
      * @param resource $file An open file handle to import from
-     *
-     * @throws ProcessFailedException if the process didn't exit successfully
      */
     public function importDatabase($file)
     {
-        $process = $this->newCommand('wp --allow-root db import -', ['-i']);
+        $this->detectNetwork();
+
+        $command = 'wp --allow-root db import -';
+
+        if ($this->isMultisite) {
+            $command .= ' --url=' . $this->env('SERVER_NAME');
+        }
+
+        $process = $this->newCommand($command, ['-i']);
         $process->setInput($file);
-        $process->setTimeout(300);
+        $process->setTimeout(900); // 15 minutes for large db's
         $process->mustRun();
+    }
+
+    /**
+     * Checks if we are interacting with a Multisite network.
+     * Uses exit codes:
+     * - Exit code 0 = multisite installed
+     * - Anything other than a 0 throws an exception (this includes standard WP installations)
+     *
+     * https://developer.wordpress.org/cli/commands/core/is-installed/
+     */
+    public function detectNetwork()
+    {
+        try {
+            $this->execute('wp --allow-root core is-installed --network');
+            $this->isMultisite = true;
+        } catch (ProcessFailedException $exception) {
+            $this->isMultisite = false;
+        }
     }
 }

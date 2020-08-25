@@ -54,6 +54,7 @@ class InstanceFactory
      */
     protected function awsIdentifier($identifier)
     {
+        $matches = [];
         if (preg_match('/^([a-z0-9-]+):(dev|staging|prod)$/', $identifier, $matches)) {
             return [
                 'appName' => $matches[1],

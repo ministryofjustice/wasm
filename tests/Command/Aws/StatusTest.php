@@ -17,7 +17,7 @@ class StatusTest extends TestCase
      */
     protected $command;
 
-    public function setUp()
+    public function setUp(): void
     {
         $application = new Application();
         $command = new Status($this->mockHostingStackCollection());

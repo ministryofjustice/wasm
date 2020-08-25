@@ -4,6 +4,7 @@ namespace WpEcs\Tests\Command\Aws;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
 use WpEcs\Aws\HostingStack;
@@ -33,6 +34,8 @@ class StopTest extends TestCase
 
     /**
      * @dataProvider executeDataProvider
+     * @param $instanceIdentifier
+     * @param $stackName
      */
     public function testStopNonProduction($instanceIdentifier, $stackName)
     {
@@ -43,7 +46,7 @@ class StopTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        $this->assertContains("Success: $instanceIdentifier is being stopped", $output);
+        $this->assertStringContainsString("Success: $instanceIdentifier is being stopped", $output);
     }
 
     public function yesStrings()
@@ -68,9 +71,9 @@ class StopTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        $this->assertContains('stop a production instance', $output);
-        $this->assertContains('Are you sure you want to do that?', $output);
-        $this->assertContains("Success: example:prod is being stopped", $output);
+        $this->assertStringContainsString('stop a production instance', $output);
+        $this->assertStringContainsString('Are you sure you want to do that?', $output);
+        $this->assertStringContainsString("Success: example:prod is being stopped", $output);
     }
 
     public function noStrings()
@@ -100,7 +103,7 @@ class StopTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        $this->assertContains('Are you sure you want to do that?', $output);
+        $this->assertStringContainsString('Are you sure you want to do that?', $output);
     }
 
     /**
@@ -120,14 +123,14 @@ class StopTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        $this->assertContains("Success: $instanceIdentifier is being stopped", $output);
+        $this->assertStringContainsString("Success: $instanceIdentifier is being stopped", $output);
     }
 
     /**
      * @param string|false $expectStackName Expect `HostingStackCollection::getStack` to be called with this stack name
      * @param bool $expectCallToStop Expect that `HostingStack::stop` is called once. If false, it should never be called.
      *
-     * @return \Symfony\Component\Console\Command\Command
+     * @return Command
      */
     protected function getSubject($expectStackName, $expectCallToStop)
     {

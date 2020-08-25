@@ -46,7 +46,7 @@ class AwsInstance extends AbstractInstance
         
         $command = $this->prepareCommand($command, $dockerOptions, $sshOptions);
         $process = new Process($command);
-        $process->setTimeout(300);
+        $process->setTimeout(5400);
 
         return $process;
     }

@@ -58,7 +58,7 @@ class Shell extends Command
             ['-t']
         );
         $process->setTty(true);
-        $process->setTimeout(300);
+        $process->setTimeout(2700); // 45 minutes for extended keep-alive
         $process->run();
     }
 }

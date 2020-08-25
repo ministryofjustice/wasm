@@ -14,16 +14,16 @@ class AwsInstanceTest extends TestCase
      */
     protected $instance;
 
-    protected function setUp()
+    protected function setUp(): void
     {
-        $aws                    = $this->createMock(AwsResources::class);
-        $aws->stackName         = 'example-dev';
-        $aws->ecsCluster        = 'devcluster';
-        $aws->ecsServiceName    = 'example-dev-WebService-XXXXXXXXXXXXX';
-        $aws->ecsTaskArn        = 'arn:aws:ecs:eu-west-2:000000000000:task/3caf92c9-9c61-5397-4feb-e7a919225983';
-        $aws->ec2Hostname       = 'ec2host.com';
+        $aws = $this->createMock(AwsResources::class);
+        $aws->stackName = 'example-dev';
+        $aws->ecsCluster = 'devcluster';
+        $aws->ecsServiceName = 'example-dev-WebService-XXXXXXXXXXXXX';
+        $aws->ecsTaskArn = 'arn:aws:ecs:eu-west-2:000000000000:task/3caf92c9-9c61-5397-4feb-e7a919225983';
+        $aws->ec2Hostname = 'ec2host.com';
         $aws->dockerContainerId = 'c8a7b8';
-        $aws->s3BucketName      = 'example-dev-bucket';
+        $aws->s3BucketName = 'example-dev-bucket';
 
         $this->instance = new AwsInstance('example', 'dev', $aws);
     }
@@ -140,9 +140,9 @@ class AwsInstanceTest extends TestCase
         $expected = 'https://s3-eu-west-2.amazonaws.com/example-dev-bucket/uploads';
 
         $instance->expects($this->once())
-                 ->method('env')
-                 ->with('S3_UPLOADS_BASE_URL')
-                 ->willReturn($expected);
+            ->method('env')
+            ->with('S3_UPLOADS_BASE_URL')
+            ->willReturn($expected);
 
         $actual = $instance->uploadsBaseUrl;
         $this->assertEquals($expected, $actual);

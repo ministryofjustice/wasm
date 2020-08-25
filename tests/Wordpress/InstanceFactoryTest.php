@@ -16,7 +16,7 @@ class InstanceFactoryTest extends TestCase
      */
     protected $subject;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->subject = new InstanceFactory();
     }

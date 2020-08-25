@@ -26,7 +26,7 @@ class AwsResourcesTest extends TestCase
      */
     protected $sdk;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->sdk = $this->mockSdk();
 

@@ -57,6 +57,7 @@ class HostingStack
 
     protected function getAppNameAndEnvironment()
     {
+        $matches = [];
         $stackName = $this->description['StackName'];
         preg_match('/^([a-z0-9-]+)\-(dev|staging|prod)$/', $stackName, $matches);
 

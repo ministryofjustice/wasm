@@ -22,7 +22,7 @@ class MigrateTest extends TestCase
      */
     protected $command;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->setupMockInstance();
 
@@ -81,7 +81,7 @@ class MigrateTest extends TestCase
         ]);
 
         $successMessage = 'Success: Migrated example:dev to example:staging';
-        $this->assertContains($successMessage, $commandTester->getDisplay());
+        $this->assertStringContainsString($successMessage, $commandTester->getDisplay());
     }
 
     public function testNewMigration()
@@ -133,9 +133,9 @@ class MigrateTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        $this->assertContains('migrate data to a production instance', $output);
-        $this->assertContains('Are you sure you want to do that?', $output);
-        $this->assertContains("Success: Migrated example:dev to example:prod", $output);
+        $this->assertStringContainsString('migrate data to a production instance', $output);
+        $this->assertStringContainsString('Are you sure you want to do that?', $output);
+        $this->assertStringContainsString("Success: Migrated example:dev to example:prod", $output);
     }
 
     public function noStrings()

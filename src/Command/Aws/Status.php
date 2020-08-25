@@ -54,6 +54,7 @@ class Status extends Command
      */
     public function formatTableData($stacks)
     {
+        $apps = [];
         foreach ($stacks as $stack) {
             if (!isset($apps[$stack->appName])) {
                 $apps[$stack->appName] = [

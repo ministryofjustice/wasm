@@ -112,6 +112,7 @@ class AwsResources
             'LogicalResourceId' => 'WebService',
         ]);
 
+        $matches = [];
         $serviceArn = $resource['StackResourceDetail']['PhysicalResourceId'];
         preg_match('/service\/(.*)/', $serviceArn, $matches);
 

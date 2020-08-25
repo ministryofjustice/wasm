@@ -19,7 +19,7 @@ class ShellTest extends TestCase
      */
     protected $command;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->setupMockInstance();
         $application = new Application();

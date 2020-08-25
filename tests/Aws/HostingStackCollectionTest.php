@@ -14,7 +14,7 @@ class HostingStackCollectionTest extends TestCase
         $collection = new HostingStackCollection(
             $this->mockCloudFormationClient()
         );
-        $stacks     = $collection->getStacks();
+        $stacks = $collection->getStacks();
 
         $this->assertCount(count($this->validHostingStackDescriptions()), $stacks);
         $this->assertContainsOnlyInstancesOf(HostingStack::class, $stacks);
@@ -26,18 +26,18 @@ class HostingStackCollectionTest extends TestCase
 
         $expectedValues = [
             [
-                'appName'    => 'example',
-                'env'        => 'dev',
-                'isActive'   => true,
+                'appName' => 'example',
+                'env' => 'dev',
+                'isActive' => true,
                 'isUpdating' => false,
-                'family'     => 'WordPress',
+                'family' => 'WordPress',
             ],
             [
-                'appName'    => 'example',
-                'env'        => 'staging',
-                'isActive'   => true,
+                'appName' => 'example',
+                'env' => 'staging',
+                'isActive' => true,
                 'isUpdating' => false,
-                'family'     => 'WordPress',
+                'family' => 'WordPress',
             ],
         ];
 
@@ -52,36 +52,37 @@ class HostingStackCollectionTest extends TestCase
             CloudFormationClient::class,
             ['describeStacks']
         );
+
         $cloudformation->expects($this->once())
-                       ->method('describeStacks')
-                       ->with(['StackName' => 'example-dev'])
-                       ->willReturn([
-                           'Stacks' => [
-                               [
-                                   'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-                                   'StackName' => 'example-dev',
-                                   'Parameters' => [
-                                       [
-                                           'ParameterKey' => 'AppName',
-                                           'ParameterValue' => 'example',
-                                       ],
-                                       [
-                                           'ParameterKey' => 'Active',
-                                           'ParameterValue' => 'true',
-                                       ],
-                                       [
-                                           'ParameterKey' => 'Environment',
-                                           'ParameterValue' => 'development',
-                                       ],
-                                       [
-                                           'ParameterKey' => 'DockerImage',
-                                           'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
-                                       ],
-                                   ],
-                                   'StackStatus' => 'UPDATE_COMPLETE',
-                               ],
-                           ],
-                       ]);
+            ->method('describeStacks')
+            ->with(['StackName' => 'example-dev'])
+            ->willReturn([
+                'Stacks' => [
+                    [
+                        'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+                        'StackName' => 'example-dev',
+                        'Parameters' => [
+                            [
+                                'ParameterKey' => 'AppName',
+                                'ParameterValue' => 'example',
+                            ],
+                            [
+                                'ParameterKey' => 'Active',
+                                'ParameterValue' => 'true',
+                            ],
+                            [
+                                'ParameterKey' => 'Environment',
+                                'ParameterValue' => 'development',
+                            ],
+                            [
+                                'ParameterKey' => 'DockerImage',
+                                'ParameterValue' => '000000000000.dkr.ecr.eu-west-2.amazonaws.com/wp/example:2c72c28-201810091200',
+                            ],
+                        ],
+                        'StackStatus' => 'UPDATE_COMPLETE',
+                    ],
+                ],
+            ]);
 
         $collection = new HostingStackCollection($cloudformation);
         $stack = $collection->getStack('example-dev');
@@ -98,27 +99,27 @@ class HostingStackCollectionTest extends TestCase
             ['describeStacks']
         );
         $cloudformation->expects($this->once())
-                       ->method('describeStacks')
-                       ->with(['StackName' => 'some-other-stack'])
-                       ->willReturn([
-                           'Stacks' => [
-                               [
-                                   'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/some-other-stack/c96d3035-458a-5ae5-ada3-ee273c59e65a',
-                                   'StackName' => 'some-other-stack',
-                                   'Parameters' => [
-                                       [
-                                           'ParameterKey' => 'SomeParameter',
-                                           'ParameterValue' => 'some value',
-                                       ],
-                                       [
-                                           'ParameterKey' => 'SomeOtherParameter',
-                                           'ParameterValue' => 'another value',
-                                       ],
-                                   ],
-                                   'StackStatus' => 'CREATE_COMPLETE',
-                               ],
-                           ],
-                       ]);
+            ->method('describeStacks')
+            ->with(['StackName' => 'some-other-stack'])
+            ->willReturn([
+                'Stacks' => [
+                    [
+                        'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/some-other-stack/c96d3035-458a-5ae5-ada3-ee273c59e65a',
+                        'StackName' => 'some-other-stack',
+                        'Parameters' => [
+                            [
+                                'ParameterKey' => 'SomeParameter',
+                                'ParameterValue' => 'some value',
+                            ],
+                            [
+                                'ParameterKey' => 'SomeOtherParameter',
+                                'ParameterValue' => 'another value',
+                            ],
+                        ],
+                        'StackStatus' => 'CREATE_COMPLETE',
+                    ],
+                ],
+            ]);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('This is not a hosting stack');
@@ -127,7 +128,8 @@ class HostingStackCollectionTest extends TestCase
         $collection->getStack('some-other-stack');
     }
 
-    protected function validHostingStackDescriptions() {
+    protected function validHostingStackDescriptions()
+    {
         return [
             [
                 'StackId' => 'arn:aws:cloudformation:eu-west-2:000000000000:stack/example-dev/c96d3035-458a-5ae5-ada3-ee273c59e65a',
@@ -178,7 +180,8 @@ class HostingStackCollectionTest extends TestCase
         ];
     }
 
-    protected function invalidHostingStackDescriptions() {
+    protected function invalidHostingStackDescriptions()
+    {
         return [
             // The StackName doesn't fit our expected pattern
             [
@@ -258,7 +261,8 @@ class HostingStackCollectionTest extends TestCase
         ];
     }
 
-    protected function mockCloudFormationClient() {
+    protected function mockCloudFormationClient()
+    {
         $mockStackDescriptions = array_merge(
             $this->validHostingStackDescriptions(),
             $this->invalidHostingStackDescriptions()
@@ -266,15 +270,15 @@ class HostingStackCollectionTest extends TestCase
 
         $mock = $this->createMock(CloudFormationClient::class);
         $mock->expects($this->once())
-             ->method('getPaginator')
-             ->with('DescribeStacks')
-             ->willReturnCallback(function() use ($mockStackDescriptions) {
-                 shuffle($mockStackDescriptions);
-                 $chunked = array_chunk($mockStackDescriptions, 2);
-                 return array_map(function($chunk) {
-                     return ['Stacks' => $chunk];
-                 }, $chunked);
-             });
+            ->method('getPaginator')
+            ->with('DescribeStacks')
+            ->willReturnCallback(function () use ($mockStackDescriptions) {
+                shuffle($mockStackDescriptions);
+                $chunked = array_chunk($mockStackDescriptions, 2);
+                return array_map(function ($chunk) {
+                    return ['Stacks' => $chunk];
+                }, $chunked);
+            });
 
         return $mock;
     }
