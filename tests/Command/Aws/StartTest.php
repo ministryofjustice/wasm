@@ -4,6 +4,7 @@ namespace WpEcs\Tests\Command\Aws;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use WpEcs\Aws\HostingStack;
 use WpEcs\Aws\HostingStackCollection;
@@ -31,6 +32,8 @@ class StartTest extends TestCase
 
     /**
      * @dataProvider executeDataProvider
+     * @param $instanceIdentifier
+     * @param $stackName
      */
     public function testStop($instanceIdentifier, $stackName)
     {
@@ -41,13 +44,13 @@ class StartTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        $this->assertContains("Success: $instanceIdentifier is starting", $output);
+        $this->assertStringContainsString("Success: $instanceIdentifier is starting", $output);
     }
 
     /**
      * @param string|false $expectStackName Expect `HostingStackCollection::getStack` to be called with this stack name
      *
-     * @return \Symfony\Component\Console\Command\Command
+     * @return Command
      */
     protected function getSubject($expectStackName)
     {

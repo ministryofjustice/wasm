@@ -60,7 +60,7 @@ class LocalInstance extends AbstractInstance
     protected function newProcess($command)
     {
         $process = new Process($command);
-        $process->setTimeout(1800);
+        $process->setTimeout(1800); // 30 minutes for long processes
         $process->setWorkingDirectory($this->workingDirectory);
 
         return $process;

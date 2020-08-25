@@ -19,7 +19,7 @@ class ImportTest extends TestCase
      */
     protected $command;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->setupMockInstance();
         $application = new Application();
@@ -45,12 +45,12 @@ class ImportTest extends TestCase
         $filename = "{$vfs->url()}/database.sql";
 
         $this->instance->expects($this->once())
-                       ->method('importDatabase')
-                       ->with($this->callback('is_resource'))
-                       ->willReturnCallback(function($fh) {
-                           $fileContent = fread($fh, 1024);
-                           $this->assertEquals('Database content to import', $fileContent);
-                       });
+            ->method('importDatabase')
+            ->with($this->callback('is_resource'))
+            ->willReturnCallback(function ($fh) {
+                $fileContent = fread($fh, 1024);
+                $this->assertEquals('Database content to import', $fileContent);
+            });
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
@@ -59,7 +59,7 @@ class ImportTest extends TestCase
             'filename' => $filename,
         ]);
 
-        $this->assertContains("Success: Database imported from $filename", $commandTester->getDisplay());
+        $this->assertStringContainsString("Success: Database imported from $filename", $commandTester->getDisplay());
     }
 
     public function yesStrings()
@@ -85,7 +85,7 @@ class ImportTest extends TestCase
         $this->instance->expects($this->once())
             ->method('importDatabase')
             ->with($this->callback('is_resource'))
-            ->willReturnCallback(function($fh) {
+            ->willReturnCallback(function ($fh) {
                 $fileContent = fread($fh, 1024);
                 $this->assertEquals('Database content to import', $fileContent);
             });
@@ -99,9 +99,9 @@ class ImportTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        $this->assertContains('import data to a production instance', $output);
-        $this->assertContains('Are you sure you want to do that?', $output);
-        $this->assertContains("Success: Database imported from $filename", $output);
+        $this->assertStringContainsString('import data to a production instance', $output);
+        $this->assertStringContainsString('Are you sure you want to do that?', $output);
+        $this->assertStringContainsString("Success: Database imported from $filename", $output);
     }
 
     public function noStrings()
@@ -127,7 +127,7 @@ class ImportTest extends TestCase
         $this->instance->expects($this->never())
             ->method('importDatabase')
             ->with($this->callback('is_resource'))
-            ->willReturnCallback(function($fh) {
+            ->willReturnCallback(function ($fh) {
                 $fileContent = fread($fh, 1024);
                 $this->assertEquals('Database content to import', $fileContent);
             });

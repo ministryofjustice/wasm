@@ -14,9 +14,9 @@ class AbstractInstanceTest extends TestCase
         $instance = $this->newInstance(['execute']);
 
         $instance->expects($this->once())
-                 ->method('execute')
-                 ->with('printenv SERVER_NAME')
-                 ->willReturn("example.com\n");
+            ->method('execute')
+            ->with('printenv SERVER_NAME')
+            ->willReturn("example.com\n");
 
         for ($i = 0; $i < 3; $i++) {
             // The first call to $instance->env() should trigger $instance->execute() and cache the response
@@ -29,21 +29,21 @@ class AbstractInstanceTest extends TestCase
     public function testExecute()
     {
         $command = 'command-to-execute';
-        $output  = 'Output from command';
+        $output = 'Output from command';
 
         $process = $this->createMock(Process::class);
         $process->expects($this->once())
-                ->method('mustRun')
-                ->willReturnSelf();
+            ->method('mustRun')
+            ->willReturnSelf();
         $process->expects($this->atLeastOnce())
-                ->method('getOutput')
-                ->willReturn($output);
+            ->method('getOutput')
+            ->willReturn($output);
 
         $instance = $this->newInstance(['newCommand']);
         $instance->expects($this->atLeastOnce())
-                 ->method('newCommand')
-                 ->with($command)
-                 ->willReturn($process);
+            ->method('newCommand')
+            ->with($command)
+            ->willReturn($process);
 
         $actualOutput = $instance->execute($command);
         $this->assertEquals($output, $actualOutput);
@@ -53,24 +53,26 @@ class AbstractInstanceTest extends TestCase
     {
         $structure = ['database.sql' => 'SQL file content'];
         $vfs = vfsStream::setup('root', null, $structure);
-        $fh = fopen("{$vfs->url()}/database.sql", 'r');
+        $fileHandle = fopen("{$vfs->url()}/database.sql", 'r');
 
         $process = $this->createMock(Process::class);
         $process->expects($this->at(0))
-                ->method('setInput')
-                ->with($fh)
-                ->willReturnSelf();
+            ->method('setInput')
+            ->with($fileHandle)
+            ->willReturnSelf();
         $process->expects($this->at(1))
-                ->method('mustRun')
-                ->willReturnSelf();
+            ->method('mustRun')
+            ->willReturnSelf();
 
         $instance = $this->newInstance(['newCommand']);
         $instance->expects($this->atLeastOnce())
-                 ->method('newCommand')
-                 ->with('wp --allow-root db import -', ['-i'])
-                 ->willReturn($process);
+            ->method('detectNetwork');
+        $instance->expects($this->atLeastOnce())
+            ->method('newCommand')
+            ->with('wp --allow-root db import -', ['-i'])
+            ->willReturn($process);
 
-        $instance->importDatabase($fh);
+        $instance->importDatabase($fileHandle);
     }
 
     public function testExportDatabase()
@@ -78,7 +80,7 @@ class AbstractInstanceTest extends TestCase
         $vfs = vfsStream::setup('root', null);
         $exportPath = "{$vfs->url()}/database.sql";
         $errorPath = "{$vfs->url()}/stderr";
-        $fh = fopen($exportPath, 'w');
+        $fileHandle = fopen($exportPath, 'w');
         $err = fopen($errorPath, 'w');
 
         $exportData = 'Output from "wp db export" command which should be written to the SQL file';
@@ -86,30 +88,33 @@ class AbstractInstanceTest extends TestCase
 
         $process = $this->createMock(Process::class);
         $process->expects($this->atLeastOnce())
-                ->method('disableOutput')
-                ->willReturnSelf();
+            ->method('disableOutput')
+            ->willReturnSelf();
         $process->expects($this->atLeastOnce())
-                ->method('mustRun')
-                ->with($this->callback('is_callable'))
-                ->willReturnCallback(function($callback) use ($exportData, $errorMessage) {
-                    // Output some data to stderr
-                    $callback(Process::ERR, $errorMessage);
+            ->method('mustRun')
+            ->with($this->callback('is_callable'))
+            ->willReturnCallback(function ($callback) use ($exportData, $errorMessage) {
+                // Output some data to stderr
+                $callback(Process::ERR, $errorMessage);
 
-                    // Split export data into chunks to emulate command output being streamed to the callback via multiple invocations
-                    $exportChunks = str_split($exportData, 20);
-                    foreach ($exportChunks as $chunk) {
-                        $callback(Process::OUT, $chunk);
-                    }
-                });
+                // Split export data into chunks to emulate command output being streamed to the callback via multiple invocations
+                $exportChunks = str_split($exportData, 20);
+                foreach ($exportChunks as $chunk) {
+                    $callback(Process::OUT, $chunk);
+                }
+            });
 
         $instance = $this->newInstance(['newCommand']);
         $instance->expects($this->atLeastOnce())
-                 ->method('newCommand')
-                 ->with('wp --allow-root db export -')
-                 ->willReturn($process);
+            ->method('detectNetwork');
+        $instance->expects($this->atLeastOnce())
+            ->method('newCommand')
+            ->with('wp --allow-root db export -')
+            ->willReturn($process);
 
-        $instance->exportDatabase($fh, $err);
-        fclose($fh);
+        $instance->exportDatabase($fileHandle, null, $err);
+
+        fclose($fileHandle);
         fclose($err);
 
         $fileContents = file_get_contents($exportPath);
@@ -120,7 +125,7 @@ class AbstractInstanceTest extends TestCase
     }
 
     /**
-     * Create a mock AbstrastInstance object
+     * Create a mock AbstractInstance object
      *
      * @param array $mockMethods Methods to mock
      *
@@ -138,5 +143,12 @@ class AbstractInstanceTest extends TestCase
             true,
             $mockMethods
         );
+    }
+
+    public function testDetectNetwork()
+    {
+        $source = $this->newInstance();
+        $source->expects($this->once())
+            ->method('execute');
     }
 }

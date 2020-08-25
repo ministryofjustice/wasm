@@ -2,7 +2,9 @@
 
 namespace WpEcs\Tests\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 use WpEcs\Service\Migration;
 use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\LocalInstance;
@@ -18,34 +20,32 @@ class MigrationTest extends TestCase
      */
     protected $output;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->output = $this->createMock(OutputInterface::class);
     }
 
     public function testMigrate()
     {
-        $m = $this->createPartialMock(Migration::class,[
-            'beginStep',
-            'endStep',
-            'moveDatabase',
-            'rewriteDatabase',
-            'syncUploads',
-        ]);
+        $migration = $this->createMock(Migration::class);
 
-        $m->expects($this->at(0))->method('beginStep')->with($this->stringContains('Moving database'));
-        $m->expects($this->at(1))->method('moveDatabase');
-        $m->expects($this->at(2))->method('endStep');
+        $migration->expects($this->at(0))->method('beginStep')->with($this->stringContains('Checking compatibility'));
+        $migration->expects($this->at(1))->method('detectNetwork');
+        $migration->expects($this->at(2))->method('endStep');
 
-        $m->expects($this->at(3))->method('beginStep')->with($this->stringContains('Rewriting database'));
-        $m->expects($this->at(4))->method('rewriteDatabase');
-        $m->expects($this->at(5))->method('endStep');
+        $migration->expects($this->at(3))->method('beginStep')->with($this->stringContains('Moving database'));
+        $migration->expects($this->at(4))->method('moveDatabase');
+        $migration->expects($this->at(5))->method('endStep');
 
-        $m->expects($this->at(6))->method('beginStep')->with($this->stringContains('Syncing media uploads'));
-        $m->expects($this->at(7))->method('syncUploads');
-        $m->expects($this->at(8))->method('endStep');
+        $migration->expects($this->at(6))->method('beginStep')->with($this->stringContains('Rewriting database'));
+        $migration->expects($this->at(7))->method('rewriteDatabase');
+        $migration->expects($this->at(8))->method('endStep');
 
-        $m->migrate();
+        $migration->expects($this->at(9))->method('beginStep')->with($this->stringContains('Syncing media uploads'));
+        $migration->expects($this->at(10))->method('syncUploads');
+        $migration->expects($this->at(11))->method('endStep');
+
+        $migration->migrate();
     }
 
     public function testMoveDatabase()
@@ -58,29 +58,29 @@ class MigrationTest extends TestCase
          *
          * @return bool
          */
-        $isRewoundFile = function ($fh) {
-            return is_resource($fh) && ftell($fh) === 0;
+        $isRewoundFile = function ($fileHandle) {
+            return is_resource($fileHandle) && ftell($fileHandle) === 0;
         };
 
         $source = $this->mockInstance();
         $source->expects($this->once())
-               ->method('exportDatabase')
-               ->with($this->callback($isRewoundFile))
-               ->willReturnCallback(function ($fh) {
-                   fwrite($fh, 'Exported database from source');
-               });
+            ->method('exportDatabase')
+            ->with($this->callback($isRewoundFile))
+            ->willReturnCallback(function ($fh) {
+                fwrite($fh, 'Exported database from source');
+            });
 
         $dest = $this->mockInstance();
         $dest->expects($this->once())
-             ->method('importDatabase')
-             ->with($this->callback($isRewoundFile));
+            ->method('importDatabase')
+            ->with($this->callback($isRewoundFile));
 
         $this->output->expects($this->exactly(2))
-                     ->method('writeln')
-                     ->withConsecutive(
-                         [$this->stringStartsWith('Exporting database'), OutputInterface::VERBOSITY_VERBOSE],
-                         [$this->stringStartsWith('Importing database'), OutputInterface::VERBOSITY_VERBOSE]
-                     );
+            ->method('writeln')
+            ->withConsecutive(
+                [$this->stringStartsWith('Exporting database'), OutputInterface::VERBOSITY_VERBOSE],
+                [$this->stringStartsWith('Importing database'), OutputInterface::VERBOSITY_VERBOSE]
+            );
 
         $migration = new Migration($source, $dest, $this->output);
         $migration->moveDatabase();
@@ -88,12 +88,13 @@ class MigrationTest extends TestCase
 
     public function testDbSearchReplace()
     {
-        $searchFor   = 'search for this';
+        $searchFor = 'search for this';
         $replaceWith = 'replace with this';
 
         $validCommand = function ($command) use ($searchFor, $replaceWith) {
             $this->assertEquals('wp', $command[0]);
-            $this->assertEquals('search-replace', $command[2]);
+            $this->assertEquals('search-replace', $command[1]);
+            $this->assertEquals('--allow-root', $command[3]);
 
             $lastItem = count($command) - 1;
 
@@ -104,10 +105,10 @@ class MigrationTest extends TestCase
         };
 
         $source = $this->mockInstance();
-        $dest   = $this->mockInstance();
+        $dest = $this->mockInstance();
         $dest->expects($this->once())
-             ->method('execute')
-             ->with($this->callback($validCommand));
+            ->method('execute')
+            ->with($this->callback($validCommand));
 
         $migration = new Migration($source, $dest, $this->output);
         $migration->dbSearchReplace($searchFor, $replaceWith);
@@ -115,47 +116,47 @@ class MigrationTest extends TestCase
 
     public function testRewriteDatabase()
     {
-        $source                 = $this->mockInstance();
+        $source = $this->mockInstance();
         $source->uploadsBaseUrl = 'http://example.docker/app/uploads';
         $source->expects($this->exactly(2))
-               ->method('env')
-               ->will($this->returnValueMap([
-                   ['WP_HOME', 'http://example.docker'],
-                   ['SERVER_NAME', 'example.docker'],
-               ]));
+            ->method('env')
+            ->will($this->returnValueMap([
+                ['WP_HOME', 'http://example.docker'],
+                ['SERVER_NAME', 'example.docker'],
+            ]));
 
-        $dest                 = $this->mockInstance();
+        $dest = $this->mockInstance();
         $dest->uploadsBaseUrl = 'https://s3-eu-west-2.amazonaws.com/example-dev-storage/uploads';
         $dest->expects($this->exactly(2))
-             ->method('env')
-             ->will($this->returnValueMap([
-                 ['WP_HOME', 'https://example.dev.wp.dsd.io'],
-                 ['SERVER_NAME', 'example.dev.wp.dsd.io'],
-             ]));
+            ->method('env')
+            ->will($this->returnValueMap([
+                ['WP_HOME', 'https://example.dev.wp.dsd.io'],
+                ['SERVER_NAME', 'example.dev.wp.dsd.io'],
+            ]));
 
         $migration = $this->getMockBuilder(Migration::class)
-                          ->setConstructorArgs([$source, $dest, $this->output])
-                          ->setMethods(['dbSearchReplace'])
-                          ->getMock();
+            ->setConstructorArgs([$source, $dest, $this->output])
+            ->addMethods(['dbSearchReplace'])
+            ->getMock();
 
         // Search & replace terms become less specific with each consecutive call
         // This must happen in order, so that broad search & replace terms don't replace more specific terms
         $migration->expects($this->exactly(3))
-                  ->method('dbSearchReplace')
-                  ->withConsecutive(
-                      [
-                          'http://example.docker/app/uploads',
-                          'https://s3-eu-west-2.amazonaws.com/example-dev-storage/uploads',
-                      ],
-                      [
-                          'http://example.docker',
-                          'https://example.dev.wp.dsd.io',
-                      ],
-                      [
-                          'example.docker',
-                          'example.dev.wp.dsd.io',
-                      ]
-                  );
+            ->method('dbSearchReplace')
+            ->withConsecutive(
+                [
+                    'http://example.docker/app/uploads',
+                    'https://s3-eu-west-2.amazonaws.com/example-dev-storage/uploads',
+                ],
+                [
+                    'http://example.docker',
+                    'https://example.dev.wp.dsd.io',
+                ],
+                [
+                    'example.docker',
+                    'example.dev.wp.dsd.io',
+                ]
+            );
 
         $migration->rewriteDatabase();
     }
@@ -171,20 +172,20 @@ class MigrationTest extends TestCase
              */
             [
                 [LocalInstance::class, '/path/to/local-instance/web/app/uploads'],
-                [AwsInstance::class,   's3://destination-bucket/uploads'],
+                [AwsInstance::class, 's3://destination-bucket/uploads'],
             ],
             [
-                [AwsInstance::class,   's3://source-bucket/uploads'],
+                [AwsInstance::class, 's3://source-bucket/uploads'],
                 [LocalInstance::class, '/path/to/local-instance/web/app/uploads'],
             ],
             [
-                [AwsInstance::class,   's3://source-bucket/uploads'],
-                [AwsInstance::class,   's3://destination-bucket/uploads'],
+                [AwsInstance::class, 's3://source-bucket/uploads'],
+                [AwsInstance::class, 's3://destination-bucket/uploads'],
             ],
             [
                 [LocalInstance::class, '/path/to/local-instance/web/app/uploads'],
                 [LocalInstance::class, '/a/different/local-instance/web/app/uploads'],
-            ],
+            ]
         ];
     }
 
@@ -192,7 +193,7 @@ class MigrationTest extends TestCase
      * @dataProvider syncUploadsDataProvider
      * @param array $sourceArgs
      * @param array $destArgs
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public function testSyncUploads($sourceArgs, $destArgs)
     {
@@ -202,7 +203,7 @@ class MigrationTest extends TestCase
         $dest = $this->mockInstance($destArgs[0]);
         $dest->uploadsPath = $destArgs[1];
 
-        $validCommand = function($command) use ($source, $dest) {
+        $validCommand = function ($command) use ($source, $dest) {
             if ($source instanceof LocalInstance && $dest instanceof LocalInstance) {
                 // Trailing slashes are required on paths for rsync, so it syncs files within the directory rather than the directory itself
                 $expect = "rsync -avh --delete \"{$source->uploadsPath}/\" \"{$dest->uploadsPath}/\"";
@@ -210,48 +211,55 @@ class MigrationTest extends TestCase
                 $expect = "aws s3 sync --delete \"{$source->uploadsPath}\" \"{$dest->uploadsPath}\"";
             }
 
-            return ( $command == $expect );
+            return ($command == $expect);
         };
 
+        // testing writeln
         $this->output->expects($this->exactly(2))
-                     ->method('writeln')
-                     ->withConsecutive(
-                         ["Syncing files from <comment>{$source->uploadsPath}</comment> to <comment>{$dest->uploadsPath}</comment>", OutputInterface::VERBOSITY_VERBOSE],
-                         [$this->stringStartsWith('Running command: '), OutputInterface::VERBOSITY_VERBOSE]
-                     );
+            ->method('writeln')
+            ->withConsecutive(
+                ["Syncing files from <comment>{$source->uploadsPath}</comment> to <comment>{$dest->uploadsPath}</comment>", OutputInterface::VERBOSITY_VERBOSE],
+                [$this->stringStartsWith('Running command: '), OutputInterface::VERBOSITY_VERBOSE]
+            );
+
+        // testing write
         $this->output->expects($this->exactly(4))
-                     ->method('write')
-                     ->withConsecutive(
-                         ['streamed', false, OutputInterface::VERBOSITY_VERBOSE],
-                         ['output', false, OutputInterface::VERBOSITY_VERBOSE],
-                         ['from', false, OutputInterface::VERBOSITY_VERBOSE],
-                         ['command', false, OutputInterface::VERBOSITY_VERBOSE]
-                     );
+            ->method('write')
+            ->withConsecutive(
+                ['streamed', false, OutputInterface::VERBOSITY_VERBOSE],
+                ['output', false, OutputInterface::VERBOSITY_VERBOSE],
+                ['from', false, OutputInterface::VERBOSITY_VERBOSE],
+                ['command', false, OutputInterface::VERBOSITY_VERBOSE]
+            );
 
+        // mock a process object
         $process = $this->createMock(Process::class);
-        $process->expects($this->once())
-                ->method('disableOutput')
-                ->willReturnSelf();
-        $process->expects($this->once())
-                ->method('mustRun')
-                ->with($this->callback('is_callable'))
-                ->willReturnCallback(function($callback) {
-                    $commandOutput = 'streamed output from command';
 
-                    // Split output data into chunks to emulate command output being streamed to the callback via multiple invocations
-                    foreach (explode(' ', $commandOutput) as $chunk) {
-                        $callback(Process::OUT, $chunk);
-                    }
-                });
+        // check a symphony Process method will return itself, once
+        $process->expects($this->once())->method('disableOutput')->willReturnSelf();
+
+        $process->expects($this->once())
+            ->method('mustRun')
+            ->with($this->callback('is_callable'))
+            ->willReturnCallback(function ($callback) {
+                $commandOutput = 'streamed output from command';
+
+                // Split output data into chunks to emulate command output
+                // being streamed to the callback via multiple invocations
+                foreach (explode(' ', $commandOutput) as $chunk) {
+                    $callback(Process::OUT, $chunk);
+                }
+            });
 
         $migration = $this->getMockBuilder(Migration::class)
-                          ->setConstructorArgs([$source, $dest, $this->output])
-                          ->setMethods(['newProcess'])
-                          ->getMock();
+            ->setConstructorArgs([$source, $dest, $this->output])
+            ->onlyMethods(['newProcess'])
+            ->getMock();
+
         $migration->expects($this->once())
-                  ->method('newProcess')
-                  ->with($this->callback($validCommand))
-                  ->willReturn($process);
+            ->method('newProcess')
+            ->with($this->callback($validCommand))
+            ->willReturn($process);
 
         $migration->syncUploads();
     }
@@ -270,12 +278,12 @@ class MigrationTest extends TestCase
         $migration = new Migration($this->mockInstance(), $this->mockInstance(), $this->output);
 
         $this->output->expects($this->any())
-                     ->method('getVerbosity')
-                     ->willReturn(OutputInterface::VERBOSITY_NORMAL);
+            ->method('getVerbosity')
+            ->willReturn(OutputInterface::VERBOSITY_NORMAL);
 
         $this->output->expects($this->once())
-                     ->method('writeln')
-                     ->with('Name of step');
+            ->method('writeln')
+            ->with('Name of step');
 
         $migration->beginStep('Name of step');
     }
@@ -285,8 +293,8 @@ class MigrationTest extends TestCase
         $migration = new Migration($this->mockInstance(), $this->mockInstance(), $this->output);
 
         $this->output->expects($this->any())
-                     ->method('getVerbosity')
-                     ->willReturn(OutputInterface::VERBOSITY_VERBOSE);
+            ->method('getVerbosity')
+            ->willReturn(OutputInterface::VERBOSITY_VERBOSE);
 
         $terminalWidth = (new Terminal())->getWidth();
         // Match a string of dashes, exactly the width of the current terminal
@@ -294,12 +302,12 @@ class MigrationTest extends TestCase
         $fullLineRegex = sprintf('/^-{%d}$/', $terminalWidth);
 
         $this->output->expects($this->exactly(3))
-                     ->method('writeln')
-                     ->withConsecutive(
-                         [$this->matchesRegularExpression($fullLineRegex), OutputInterface::VERBOSITY_VERBOSE],
-                         ['<comment>NAME OF STEP</comment>',                                                  OutputInterface::VERBOSITY_VERBOSE],
-                         [$this->matchesRegularExpression($fullLineRegex), OutputInterface::VERBOSITY_VERBOSE]
-                     );
+            ->method('writeln')
+            ->withConsecutive(
+                [$this->matchesRegularExpression($fullLineRegex), OutputInterface::VERBOSITY_VERBOSE],
+                ['<comment>NAME OF STEP</comment>', OutputInterface::VERBOSITY_VERBOSE],
+                [$this->matchesRegularExpression($fullLineRegex), OutputInterface::VERBOSITY_VERBOSE]
+            );
 
         $migration->beginStep('Name of step');
     }
@@ -309,8 +317,8 @@ class MigrationTest extends TestCase
         $migration = new Migration($this->mockInstance(), $this->mockInstance(), $this->output);
 
         $this->output->expects($this->once())
-                     ->method('writeln')
-                     ->with('', OutputInterface::VERBOSITY_VERBOSE);
+            ->method('writeln')
+            ->with('', OutputInterface::VERBOSITY_VERBOSE);
 
         $migration->endStep();
     }
@@ -319,9 +327,7 @@ class MigrationTest extends TestCase
      * Create a mock Instance object
      *
      * @param string $className Class to mock (default to AbstractInstance)
-     *
-     * @return \PHPUnit\Framework\MockObject\MockObject
-     * @throws \ReflectionException
+     * @return MockObject
      */
     protected function mockInstance($className = AbstractInstance::class)
     {
@@ -337,6 +343,7 @@ class MigrationTest extends TestCase
                 'execute',
                 'exportDatabase',
                 'importDatabase',
+                'detectNetwork'
             ]
         );
     }

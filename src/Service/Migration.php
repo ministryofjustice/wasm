@@ -2,6 +2,7 @@
 
 namespace WpEcs\Service;
 
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
 use Symfony\Component\Process\Process;
@@ -39,7 +40,7 @@ class Migration
     public function __construct(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
     {
         $this->source = $source;
-        $this->dest   = $destination;
+        $this->dest = $destination;
         $this->output = $output;
     }
 
@@ -48,15 +49,21 @@ class Migration
      */
     public function migrate()
     {
-        $this->beginStep('[1/3] Moving database...');
+        $this->beginStep('[1/4] Checking compatibility...');
+        $this->source->detectNetwork();
+        $this->dest->detectNetwork();
+        $this->dbCompatibility();
+        $this->endStep();
+
+        $this->beginStep('[2/4] Moving database...');
         $this->moveDatabase();
         $this->endStep();
 
-        $this->beginStep('[2/3] Rewriting database...');
+        $this->beginStep('[3/4] Rewriting database...');
         $this->rewriteDatabase();
         $this->endStep();
 
-        $this->beginStep('[3/3] Syncing media uploads...');
+        $this->beginStep('[4/4] Syncing media uploads...');
         $this->syncUploads();
         $this->endStep();
     }
@@ -75,7 +82,7 @@ class Migration
         }
 
         $terminalWidth = (new Terminal())->getWidth();
-        $separator     = str_repeat('-', $terminalWidth);
+        $separator = str_repeat('-', $terminalWidth);
 
         $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
         $this->output->writeln('<comment>' . strtoupper($name) . '</comment>', OutputInterface::VERBOSITY_VERBOSE);
@@ -147,17 +154,25 @@ class Migration
     {
         $command = [
             'wp',
-            '--allow-root',
             'search-replace',
             '--report-changed-only',
+            '--allow-root',
+            '--skip-columns=guid',
+            '--skip-tables=wp_users',
             $search,
             $replace,
         ];
+
+        if ($this->source->isMultisite) {
+            $command[] = '--network';
+            $command[] = '--url=' . $this->source->env('WP_HOME');
+        }
 
         $this->output->writeln(
             "Search for <comment>\"$search\"</comment> & replace with <comment>\"$replace\"</comment>",
             OutputInterface::VERBOSITY_VERBOSE
         );
+
         $result = $this->dest->execute($command);
         $this->output->writeln($result, OutputInterface::VERBOSITY_VERBOSE);
     }
@@ -188,7 +203,7 @@ class Migration
     public function syncUploads()
     {
         $sourcePath = $this->source->uploadsPath;
-        $destPath   = $this->dest->uploadsPath;
+        $destPath = $this->dest->uploadsPath;
         $this->output->writeln(
             "Syncing files from <comment>$sourcePath</comment> to <comment>$destPath</comment>",
             OutputInterface::VERBOSITY_VERBOSE
@@ -214,7 +229,21 @@ class Migration
     public function newProcess($command)
     {
         $process = new Process($command);
-        $process->setTimeout(5400); // 90 minutes max for large buckets
+        $process->setTimeout(5400); // 90 minutes for large buckets
         return $process;
+    }
+
+    public function dbCompatibility()
+    {
+        if ($this->source->isMultisite !== $this->dest->isMultisite) {
+            $this->output->writeln('DB Check has failed...', OutputInterface::VERBOSITY_VERBOSE);
+            throw new InvalidArgumentException(
+                '"source" and "destination" installations must match. One is Multisite, the other is not.'
+            );
+        }
+
+        $this->output->writeln('Checks successfully complete...', OutputInterface::VERBOSITY_VERBOSE);
+
+        return true;
     }
 }

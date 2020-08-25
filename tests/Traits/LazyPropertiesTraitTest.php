@@ -12,7 +12,7 @@ class LazyPropertiesTraitTest extends TestCase
      */
     protected $subject;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->subject = $this->getMockForTrait(
             LazyPropertiesTrait::class,

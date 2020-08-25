@@ -19,7 +19,7 @@ class ExportTest extends TestCase
      */
     protected $command;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->setupMockInstance();
         $this->instance->name = 'example-dev';
@@ -58,7 +58,7 @@ class ExportTest extends TestCase
 
         $this->assertFileExists($filename);
         $this->assertEquals('Exported database content', file_get_contents($filename));
-        $this->assertContains("Success: Database exported to $filename", $commandTester->getDisplay());
+        $this->assertStringContainsString("Success: Database exported to $filename", $commandTester->getDisplay());
 
     }
 
