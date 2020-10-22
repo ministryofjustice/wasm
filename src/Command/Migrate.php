@@ -2,6 +2,7 @@
 
 namespace WpEcs\Command;
 
+use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
@@ -9,13 +10,14 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use WpEcs\Service\Migration;
+use WpEcs\Traits\Debug;
 use WpEcs\Traits\ProductionInteractionTrait;
 use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\InstanceFactory;
 
 class Migrate extends Command
 {
-    use ProductionInteractionTrait;
+    use ProductionInteractionTrait, Debug;
 
     protected $instanceFactory;
 
@@ -41,6 +43,18 @@ class Migrate extends Command
                 'Destination instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
             )
             ->addOption(
+                'url-source',
+                's',
+                InputArgument::OPTIONAL,
+                'Source site URL identifier for multisite sub-site migration'
+            )
+            ->addOption(
+                'url-dest',
+                'd',
+                InputArgument::OPTIONAL,
+                'Destination site URL identifier for multisite sub-site migration'
+            )
+            ->addOption(
                 'production',
                 'p',
                 InputOption::VALUE_NONE,
@@ -51,17 +65,24 @@ class Migrate extends Command
         $this->prodInteractMessage  = "It looks like you're trying to migrate data to a production instance.";
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int|void
+     * @throws Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $source = $input->getArgument('source');
         $dest   = $input->getArgument('destination');
+        $url_src   = $input->getOption('url-source');
+        $url_dest   = $input->getOption('url-dest');
 
         $migration = $this->newMigration(
             $this->instanceFactory->create($source),
             $this->instanceFactory->create($dest),
             $output
         );
-
         $migration->migrate();
 
         $output->writeln("<info>Success:</info> Migrated <comment>$source</comment> to <comment>$dest</comment>");

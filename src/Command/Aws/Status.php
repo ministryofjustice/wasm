@@ -8,9 +8,12 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use WpEcs\Aws\HostingStack;
 use WpEcs\Aws\HostingStackCollection;
+use WpEcs\Traits\Debug;
 
 class Status extends Command
 {
+    use Debug;
+
     /**
      * @var HostingStackCollection
      */
@@ -31,6 +34,8 @@ class Status extends Command
 
     /**
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) because we don't use $input, but the parent method defines it
+     * @param InputInterface $input
+     * @param OutputInterface $output
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -59,10 +64,10 @@ class Status extends Command
             if (!isset($apps[$stack->appName])) {
                 $apps[$stack->appName] = [
                     'appName' => $stack->appName,
-                    'family'  => $stack->family,
-                    'dev'     => '<fg=blue>Not Deployed</>',
+                    'family' => $stack->family,
+                    'dev' => '<fg=blue>Not Deployed</>',
                     'staging' => '<fg=blue>Not Deployed</>',
-                    'prod'    => '<fg=blue>Not Deployed</>',
+                    'prod' => '<fg=blue>Not Deployed</>',
                 ];
             }
 
@@ -81,13 +86,47 @@ class Status extends Command
     protected function getStackStatus($stack)
     {
         if ($stack->isUpdating) {
-            return '<fg=blue>Updating</>';
+            return '<fg=blue>Updating</>' . $this->getMSSites($stack);
         }
 
         if ($stack->isActive) {
-            return '<fg=green>Running</>';
+            return '<fg=green>Running</>' . $this->getMSSites($stack);
         }
 
-        return '<fg=red>Stopped</>';
+        return '<fg=red>Stopped</>' . $this->getMSSites($stack);
+    }
+
+    protected function getMSSites($stack)
+    {
+        if (!empty($stack->sites)) {
+            return "\n" . $this->formatMSSiteData($stack);
+        }
+
+        return '';
+    }
+
+    /**
+     * @param $stack
+     * @return string
+     */
+    protected function formatMSSiteData($stack)
+    {
+        $sites = '';
+        $domains = explode("\n", $stack->sites);
+        foreach ($domains as $domain) {
+            if ($domain !== 'Heading' && !empty($domain)) {
+                $remove_string = [
+                    '.wp.dsd.io',
+                    $stack->appName . '.',
+                    $stack->env
+                ];
+
+                $domain = str_replace($remove_string, '', $domain);
+                $domain = (strlen($domain) > 1 ? substr($domain, 0, -1) : $domain);
+                $sites .= $domain . "\n";
+            }
+        }
+
+        return rtrim($sites);
     }
 }

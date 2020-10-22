@@ -4,9 +4,13 @@ namespace WpEcs\Aws;
 
 use Aws\CloudFormation\CloudFormationClient;
 use Exception;
+use WpEcs\Traits\Debug;
+use WpEcs\Wordpress\InstanceFactory;
 
 class HostingStack
 {
+    use Debug;
+
     /**
      * @var array
      */
@@ -28,6 +32,11 @@ class HostingStack
     public $family;
 
     /**
+     * @var string
+     */
+    public $sites;
+
+    /**
      * @var bool
      */
     public $isActive;
@@ -41,17 +50,20 @@ class HostingStack
      * @var CloudFormationClient
      */
     protected $cloudformation;
+    private $instanceFactory;
 
     public function __construct($description, CloudFormationClient $cloudformation)
     {
-        $this->description    = $description;
+        $this->description = $description;
         $this->cloudformation = $cloudformation;
+        $this->instanceFactory = new InstanceFactory();
 
-        $appAndEnv        = $this->getAppNameAndEnvironment();
-        $this->appName    = $appAndEnv['app'];
-        $this->env        = $appAndEnv['env'];
-        $this->family     = $this->getFamily();
-        $this->isActive   = $this->isActive();
+        $appAndEnv = $this->getAppNameAndEnvironment();
+        $this->appName = $appAndEnv['app'];
+        $this->env = $appAndEnv['env'];
+        $this->family = $this->getFamily();
+        $this->sites = $this->getMSSites($this->appName, $this->env);
+        $this->isActive = $this->isActive();
         $this->isUpdating = $this->isUpdating();
     }
 
@@ -72,7 +84,7 @@ class HostingStack
         $image = $this->param('DockerImage');
 
         if (strpos($image, '/wp/')) {
-            return 'WordPress';
+            return 'WordPress' . ($this->isMultisite() ? " Multisite" : '');
         }
 
         if (strpos($image, '/tp-java/')) {
@@ -80,6 +92,31 @@ class HostingStack
         }
 
         return 'Unknown';
+    }
+
+    /**
+     * @param $app
+     * @param $env
+     * @return string
+     * @throws Exception
+     */
+    protected function getMSSites($app, $env): string
+    {
+        if ($this->isMultisite()) {
+            $source = $this->instanceFactory->create($app . ':' . $env);
+
+            $command = [
+                'wp',
+                '--allow-root',
+                'db',
+                'query',
+                'SELECT CONCAT(domain, path) as Heading from wp_blogs'
+            ];
+
+            return $source->execute($command);
+        }
+
+        return '';
     }
 
     /**
@@ -97,6 +134,8 @@ class HostingStack
                 return $param['ParameterValue'];
             }
         }
+
+        return null;
     }
 
     /**
@@ -121,6 +160,17 @@ class HostingStack
         return !in_array($this->description['StackStatus'], $completeStatuses);
     }
 
+    /**
+     * @return bool
+     */
+    protected function isMultisite()
+    {
+        return (!empty($this->param('WpmsSaUsername')));
+    }
+
+    /**
+     * @throws Exception
+     */
     public function start()
     {
         if ($this->isActive) {
@@ -130,6 +180,9 @@ class HostingStack
         $this->setActiveParameterValue('true');
     }
 
+    /**
+     * @throws Exception
+     */
     public function stop()
     {
         if (!$this->isActive) {
@@ -150,22 +203,22 @@ class HostingStack
         $params = array_map(function ($param) use ($value) {
             if ($param['ParameterKey'] == 'Active') {
                 return [
-                    'ParameterKey'   => $param['ParameterKey'],
+                    'ParameterKey' => $param['ParameterKey'],
                     'ParameterValue' => $value,
                 ];
             }
 
             return [
-                'ParameterKey'     => $param['ParameterKey'],
+                'ParameterKey' => $param['ParameterKey'],
                 'UsePreviousValue' => true,
             ];
         }, $this->description['Parameters']);
 
         $this->cloudformation->updateStack([
-            'StackName'           => $this->description['StackName'],
+            'StackName' => $this->description['StackName'],
             'UsePreviousTemplate' => true,
-            'Capabilities'        => ['CAPABILITY_IAM'],
-            'Parameters'          => $params,
+            'Capabilities' => ['CAPABILITY_IAM'],
+            'Parameters' => $params,
         ]);
     }
 }

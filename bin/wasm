@@ -9,8 +9,7 @@
 
     foreach ($paths as $path) {
         if (file_exists(__DIR__ . '/' . $path)) {
-            require __DIR__ . '/' . $path;
-
+            require ('' . __DIR__ . '/' . $path . '');
             return;
         }
     }
@@ -20,6 +19,7 @@
 })();
 
 use Symfony\Component\Console\Application;
+use WpEcs\Aws\HostingStackCollection;
 use WpEcs\Command\Exec;
 use WpEcs\Command\Shell;
 use WpEcs\Command\Db;
@@ -37,7 +37,7 @@ $aws = new Sdk([
     'region' => 'eu-west-2',
     'version' => 'latest',
 ]);
-$hostingStackCollection = new \WpEcs\Aws\HostingStackCollection(
+$hostingStackCollection = new HostingStackCollection(
     $aws->createCloudFormation()
 );
 
@@ -52,4 +52,9 @@ $app->addCommands([
     new Aws\Start($hostingStackCollection),
     new Aws\Stop($hostingStackCollection),
 ]);
-$app->run();
+
+try {
+    $app->run();
+} catch (Exception $e) {
+    trigger_error('[WASM FAIL] ' . $e->getMessage(), E_USER_WARNING);
+}
