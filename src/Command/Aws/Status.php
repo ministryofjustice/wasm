@@ -115,13 +115,13 @@ class Status extends Command
         $domains = explode("\n", $stack->sites);
         foreach ($domains as $domain) {
             if ($domain !== 'Heading' && !empty($domain)) {
-                $remove_string = [
+                $removeString = [
                     '.wp.dsd.io',
                     $stack->appName . '.',
                     $stack->env
                 ];
 
-                $domain = str_replace($remove_string, '', $domain);
+                $domain = str_replace($removeString, '', $domain);
                 $domain = (strlen($domain) > 1 ? substr($domain, 0, -1) : $domain);
                 $sites .= $domain . "\n";
             }

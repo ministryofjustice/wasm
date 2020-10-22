@@ -31,16 +31,26 @@ class Migration
     protected $source;
 
     /**
+     * Multisite
+     * States the --url flags for the source and destination instances
+     *
+     * @var AbstractInstance
+     */
+    protected $urls;
+
+    /**
      * Migration constructor.
      *
      * @param AbstractInstance $source
      * @param AbstractInstance $destination
+     * @param $urls
      * @param OutputInterface $output
      */
-    public function __construct(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
+    public function __construct(AbstractInstance $source, AbstractInstance $destination, $urls, OutputInterface $output)
     {
         $this->source = $source;
         $this->dest = $destination;
+        $this->urls = $urls;
         $this->output = $output;
     }
 

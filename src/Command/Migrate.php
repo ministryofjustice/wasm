@@ -42,18 +42,8 @@ class Migrate extends Command
                 InputArgument::REQUIRED,
                 'Destination instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
             )
-            ->addOption(
-                'url-source',
-                's',
-                InputArgument::OPTIONAL,
-                'Source site URL identifier for multisite sub-site migration'
-            )
-            ->addOption(
-                'url-dest',
-                'd',
-                InputArgument::OPTIONAL,
-                'Destination site URL identifier for multisite sub-site migration'
-            )
+            ->addArgument('url-source', InputArgument::OPTIONAL, 'Source site URL identifier for multisite')
+            ->addArgument('url-dest', InputArgument::OPTIONAL, 'Destination site URL identifier for multisite')
             ->addOption(
                 'production',
                 'p',
@@ -62,7 +52,7 @@ class Migrate extends Command
             );
 
         $this->prodInteractArgument = "destination";
-        $this->prodInteractMessage  = "It looks like you're trying to migrate data to a production instance.";
+        $this->prodInteractMessage = "It looks like you're trying to migrate data to a production instance.";
     }
 
     /**
@@ -73,14 +63,21 @@ class Migrate extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // multisite src/dest url
+        $url = [
+            'src' => '',
+            'dest' => ''
+        ];
+
         $source = $input->getArgument('source');
-        $dest   = $input->getArgument('destination');
-        $url_src   = $input->getOption('url-source');
-        $url_dest   = $input->getOption('url-dest');
+        $dest = $input->getArgument('destination');
+        $url['src'] = $input->getArgument('url-source');
+        $url['dest'] = $input->getArgument('url-dest');
 
         $migration = $this->newMigration(
             $this->instanceFactory->create($source),
             $this->instanceFactory->create($dest),
+            $url,
             $output
         );
         $migration->migrate();
@@ -97,7 +94,7 @@ class Migrate extends Command
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
         $source = $input->getArgument('source');
-        $dest   = $input->getArgument('destination');
+        $dest = $input->getArgument('destination');
 
         if (!empty($source) && $source == $dest) {
             throw new InvalidArgumentException('"source" and "destination" arguments cannot be the same');
@@ -114,8 +111,8 @@ class Migrate extends Command
      *
      * @return Migration
      */
-    public function newMigration(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
+    public function newMigration(AbstractInstance $source, AbstractInstance $destination, $url, OutputInterface $output)
     {
-        return new Migration($source, $destination, $output);
+        return new Migration($source, $destination, $url, $output);
     }
 }
