@@ -42,7 +42,7 @@ class Migrate extends Command
                 InputArgument::REQUIRED,
                 'Destination instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
             )
-            ->addArgument('urls', InputArgument::OPTIONAL, 'Multisite URL mapping. Valid format: "<src-url>:<dest-url>"')
+            ->addArgument('url', InputArgument::OPTIONAL, 'Multisite URL mapping. Valid format: "<src-url>:<dest-url>"')
             ->addOption(
                 'production',
                 'p',
