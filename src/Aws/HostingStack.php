@@ -4,13 +4,10 @@ namespace WpEcs\Aws;
 
 use Aws\CloudFormation\CloudFormationClient;
 use Exception;
-use WpEcs\Traits\Debug;
 use WpEcs\Wordpress\InstanceFactory;
 
 class HostingStack
 {
-    use Debug;
-
     /**
      * @var array
      */

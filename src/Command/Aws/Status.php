@@ -8,12 +8,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use WpEcs\Aws\HostingStack;
 use WpEcs\Aws\HostingStackCollection;
-use WpEcs\Traits\Debug;
 
 class Status extends Command
 {
-    use Debug;
-
     /**
      * @var HostingStackCollection
      */
