@@ -4,13 +4,10 @@ namespace WpEcs\Aws;
 
 use Aws\CloudFormation\CloudFormationClient;
 use Exception;
-use WpEcs\Traits\Debug;
 use WpEcs\Wordpress\InstanceFactory;
 
 class HostingStack
 {
-    use Debug;
-
     /**
      * @var array
      */
@@ -69,10 +66,7 @@ class HostingStack
 
     protected function getAppNameAndEnvironment()
     {
-        $matches = [];
-        $stackName = $this->description['StackName'];
-        preg_match('/^([a-z0-9-]+)\-(dev|staging|prod)$/', $stackName, $matches);
-
+        preg_match('/^([a-z0-9-]+)-(dev|staging|prod)$/', $this->description['StackName'], $matches);
         return [
             'app' => $matches[1],
             'env' => $matches[2],

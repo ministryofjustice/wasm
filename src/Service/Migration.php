@@ -31,26 +31,16 @@ class Migration
     protected $source;
 
     /**
-     * Multisite
-     * States the --url flags for the source and destination instances
-     *
-     * @var AbstractInstance
-     */
-    protected $urls;
-
-    /**
      * Migration constructor.
      *
      * @param AbstractInstance $source
      * @param AbstractInstance $destination
-     * @param $urls
      * @param OutputInterface $output
      */
-    public function __construct(AbstractInstance $source, AbstractInstance $destination, $urls, OutputInterface $output)
+    public function __construct(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
     {
         $this->source = $source;
         $this->dest = $destination;
-        $this->urls = $urls;
         $this->output = $output;
     }
 
@@ -62,6 +52,7 @@ class Migration
         $this->beginStep('[1/4] Checking compatibility...');
         $this->source->detectNetwork();
         $this->dest->detectNetwork();
+        $this->checkSiteExists();
         $this->dbCompatibility();
         $this->endStep();
 
@@ -173,9 +164,8 @@ class Migration
             $replace,
         ];
 
-        if ($this->source->isMultisite) {
-            $command[] = '--network';
-            $command[] = '--url=' . $this->source->env('WP_HOME');
+        if ($this->source->multisite) {
+            $this->multisiteSearchFilter($command);
         }
 
         $this->output->writeln(
@@ -185,6 +175,17 @@ class Migration
 
         $result = $this->dest->execute($command);
         $this->output->writeln($result, OutputInterface::VERBOSITY_VERBOSE);
+    }
+
+    protected function multisiteSearchFilter(&$command)
+    {
+        if (!empty($this->source->url)) {
+            $command[] = $this->dest->urlFlag();
+            return;
+        }
+
+        $command[] = '--network';
+        $command[] = '--url=' . $this->dest->env('WP_HOME');
     }
 
     /**
@@ -214,6 +215,15 @@ class Migration
     {
         $sourcePath = $this->source->uploadsPath;
         $destPath = $this->dest->uploadsPath;
+
+        if ($this->source->multisite) {
+            $sourceBlogId = $this->source->getBlogId();
+            $sourcePath .= '/sites/' . $sourceBlogId;
+            // dest site might not exist
+            $destBlogId = $this->dest->getBlogId() ?? $sourceBlogId;
+            $destPath .= '/sites/' . $destBlogId;
+        }
+
         $this->output->writeln(
             "Syncing files from <comment>$sourcePath</comment> to <comment>$destPath</comment>",
             OutputInterface::VERBOSITY_VERBOSE
@@ -245,7 +255,7 @@ class Migration
 
     public function dbCompatibility()
     {
-        if ($this->source->isMultisite !== $this->dest->isMultisite) {
+        if ($this->source->multisite !== $this->dest->multisite) {
             $this->output->writeln('DB Check has failed...', OutputInterface::VERBOSITY_VERBOSE);
             throw new InvalidArgumentException(
                 '"source" and "destination" installations must match. One is Multisite, the other is not.'
@@ -255,5 +265,22 @@ class Migration
         $this->output->writeln('Checks successfully complete...', OutputInterface::VERBOSITY_VERBOSE);
 
         return true;
+    }
+
+    protected function checkSiteExists()
+    {
+        if ($this->dest->multisite) {
+            // try and resolve the blog_id's
+            $this->source->getBlogId();
+            // catch a null blog_id on dest
+            if (!$this->dest->getBlogId()) {
+                // site will not import completely without being registered in the wp_blogs DB table
+                $this->output->writeln('Site (<info>' . $this->dest->url . '</info>) is missing.', OutputInterface::VERBOSITY_VERBOSE);
+                $this->output->writeln('Creating new site now....', OutputInterface::VERBOSITY_VERBOSE);
+                $this->dest->createSite($this->source->blog_id);
+                $this->dest->addSiteMeta($this->source->blog_id);
+                $this->output->writeln('<info>Done.</info>', OutputInterface::VERBOSITY_VERBOSE);
+            }
+        }
     }
 }

@@ -37,7 +37,29 @@ abstract class AbstractInstance
      *
      * @var boolean
      */
-    public $isMultisite;
+    public $multisite;
+
+    /**
+     * Multisite
+     * States the --url flags for the source and destination instances
+     *
+     * @var string
+     */
+    public $url;
+
+    /**
+     * @var mixed|string
+     */
+    public $tables;
+
+    /**
+     * @var mixed
+     */
+    public $blog_id;
+    /**
+     * @var mixed
+     */
+    private $url_is_domain;
 
     /**
      * Get the value of an environment variable in the container
@@ -96,8 +118,11 @@ abstract class AbstractInstance
 
         $command = 'wp --allow-root db export -';
 
-        if ($this->isMultisite) {
-            $command .= ' --url=' . $this->env('SERVER_NAME');
+        if ($this->multisite) {
+            $command .= ' ' . (!empty($this->url)
+                ? $this->tablesFilter()
+                : $this->urlFlag()
+            );
         }
 
         $process = $this->newCommand($command);
@@ -140,8 +165,8 @@ abstract class AbstractInstance
 
         $command = 'wp --allow-root db import -';
 
-        if ($this->isMultisite) {
-            $command .= ' --url=' . $this->env('SERVER_NAME');
+        if ($this->multisite) {
+            $command .= ' ' . $this->urlFlag();
         }
 
         $process = $this->newCommand($command, ['-i']);
@@ -162,9 +187,148 @@ abstract class AbstractInstance
     {
         try {
             $this->execute('wp --allow-root core is-installed --network');
-            $this->isMultisite = true;
+            $this->multisite = true;
         } catch (ProcessFailedException $exception) {
-            $this->isMultisite = false;
+            $this->multisite = false;
+        }
+    }
+
+    /**
+     * Multisite --url flag filter.
+     * Formats the url portion of a source or destination argument
+     * Supports custom domain names
+     *
+     * Sub-site identifiers only contain alphanumeric and dash characters. Custom domains all have dots (.) in them.
+     * We use this understanding to filter the resulting url for the multisite --url flag in a command
+     *
+     * Logic:
+     * 2. check if we have a domain name
+     * 3. if so, return the domain, otherwise
+     * 4. check if there was any value passed through $this->url
+     * 5. if so, append this value to the SERVER_NAME var, otherwise
+     * 6. return the SERVER_NAME var (targets entire DB)
+     *
+     * @return string
+     */
+    public function urlFlag(): string
+    {
+        return '--url=' . ($this->urlIsDomain()
+                ? $this->url
+                : (!empty($this->url)
+                    ? $this->env('SERVER_NAME') . '/' . $this->url
+                    : $this->env('SERVER_NAME')
+                )
+            );
+    }
+
+    /**
+     * Multisite
+     * Collects a list of sub-site tables
+     * Uses urlFlag() to target a specific site
+     * @param bool $prefix
+     * @param string $format
+     * @return string
+     */
+    public function tablesFilter($prefix = true, $format = 'csv'): string
+    {
+        if (!$this->tables) {
+            $command = [
+                'wp',
+                'db',
+                'tables',
+                '--scope=blog',
+                $this->urlFlag(),
+                '--allow-root',
+                '--format=' . $format,
+            ];
+
+            $this->tables = rtrim($this->execute($command));
+        }
+
+        return ($prefix ? '--tables=' : '') . $this->tables;
+    }
+
+    /**
+     * Tests the url property for any remaining characters, after stripping WP allowed sub-site characters.
+     * When preg_match is true, we can be certain we don't have a standard sub-site name, we have a custom domain.
+     *
+     * Does not support localhost or host names without periods (.)
+     *
+     * WP site naming convention, characters are limited to:
+     * - alphanumerics
+     * - dashes
+     *
+     * @return bool
+     */
+    protected function urlIsDomain()
+    {
+        if ($this->url_is_domain === null) {
+            $this->url_is_domain = preg_match('/[^A-Za-z0-9-]/', $this->url) ? true : false;
+        }
+
+        return $this->url_is_domain;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getBlogId()
+    {
+        if ($this->blog_id) {
+            return $this->blog_id;
+        }
+
+        $sites = json_decode($this->execute('wp --allow-root site list --fields=blog_id,url --format=json'));
+        if (is_array($sites)) {
+            foreach ($sites as $site) {
+                $testcase = ($this->urlIsDomain() ? $this->url : '/' . $this->url . '/');
+                if (strpos($site->url, $testcase) > -1) {
+                    $this->blog_id = $site->blog_id;
+                    return $site->blog_id;
+                }
+            }
+        }
+    }
+
+    public function createSite($sourceId)
+    {
+        $domain = $this->env('SERVER_NAME');
+        $path = '/' . $this->url . '/';
+        $date = date('Y-m-d H:i:s');
+
+        if ($this->urlIsDomain()) {
+            $domain = $this->url;
+            $path = '/';
+        }
+
+        $columns = '`blog_id`, `site_id`, `domain`, `path`, `registered`, `last_updated`';
+        $values = "$sourceId, 1, '$domain', '$path', '$date', '$date'";
+
+        $newSite = 'wp --allow-root db query "INSERT INTO wp_blogs (' . $columns . ') VALUES (' . $values . ')"';
+
+        $process = $this->newCommand($newSite);
+        $process->mustRun();
+    }
+
+    public function addSiteMeta($sourceId)
+    {
+        $siteCmdVersion = 'wp --allow-root site meta add ' . $sourceId . ' db_version ' . $this->getDBVersion();
+        $siteCmdUpdated = 'wp --allow-root site meta add ' . $sourceId . ' db_last_updated "' . microtime() . '"';
+
+        $process = $this->newCommand($siteCmdVersion);
+        $process->mustRun();
+
+        $process = $this->newCommand($siteCmdUpdated);
+        $process->mustRun();
+    }
+
+    protected function getDBVersion()
+    {
+        $versions = explode("\n", $this->execute('wp --allow-root core version --extra'));
+        foreach ($versions as $version) {
+            if (strpos($version, 'Database') > -1) {
+                return trim(strstr($version, ':'), ': ');
+            }
         }
     }
 }

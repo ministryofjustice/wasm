@@ -19,27 +19,30 @@ class InstanceFactory
      */
     public function create($identifier)
     {
-        $path = $this->localIdentifier($identifier);
-        if ($path) {
+        $local = $this->localIdentifier($identifier);
+        if (isset($local['path'])) {
             // This is a local instance identifier
-            return new LocalInstance($path);
+            return new LocalInstance($local['path'], $local['url']);
         }
 
         $awsId = $this->awsIdentifier($identifier);
         if ($awsId) {
             // This is an AWS instance identifier
             $sdk = new Sdk([
-                'region'  => 'eu-west-2',
+                'region' => 'eu-west-2',
                 'version' => 'latest',
             ]);
             $aws = new AwsResources($awsId['appName'], $awsId['env'], $sdk);
-            return new AwsInstance($awsId['appName'], $awsId['env'], $aws);
+            return new AwsInstance($awsId['appName'], $awsId['env'], $awsId['url'], $aws);
         }
 
         // Could not recognise this as a valid instance identifier
         $message = "Instance identifier \"$identifier\" is not valid\n";
-        $message .= 'It must be in the format "<appname>:<env>" (e.g. "sitename:dev") for an AWS instance,' . "\n";
-        $message .= 'or the path to a local instance directory (which must contain a docker-compose.yml file).';
+        $message .= 'Use the format "<appname>:<env>[:<site>]" (e.g. "sitename:dev" / sitename:dev:sub-site-url)' . "\n";
+        $message .= 'for an AWS instance, or the path to a local instance directory (this must contain a' . "\n";
+        $message .= 'docker-compose.yml file).' . "\n\n";
+        $message .= '"<site>" is an optional sub-site identifier used in Multisite for sub-site management.' . "\n";
+        $message .= 'See: https://make.wordpress.org/cli/handbook/references/config/#global-parameters)' . "\n";
         throw new Exception($message);
     }
 
@@ -54,11 +57,11 @@ class InstanceFactory
      */
     protected function awsIdentifier($identifier)
     {
-        $matches = [];
-        if (preg_match('/^([a-z0-9-]+):(dev|staging|prod)$/', $identifier, $matches)) {
+        if (preg_match('/^([a-z0-9-]+):(dev|staging|prod):?([.a-z0-9-]+)?$/', $identifier, $matches)) {
             return [
                 'appName' => $matches[1],
-                'env'     => $matches[2],
+                'env' => $matches[2],
+                'url' => ($matches[3] ?? null)
             ];
         }
 
@@ -72,22 +75,28 @@ class InstanceFactory
      *
      * @param string $identifier
      *
-     * @return string|bool
+     * @return false|array
      */
     protected function localIdentifier($identifier)
     {
+        $local['path'] = $identifier;
+        if (preg_match('/^(\.):?([.a-z0-9-]+)?$/', $identifier, $matches)) {
+            $local['path'] = $matches[1];
+            $local['url'] = $matches[2] ?? null;
+        }
+
         // $identifier must be a directory
-        if (!is_dir($identifier)) {
+        if (!is_dir($local['path'])) {
             return false;
         }
 
         // The directory must contain a docker-compose config file
-        if (!file_exists("$identifier/docker-compose.yml") &&
-            !file_exists("$identifier/docker-compose.yaml")
+        if (!file_exists($local['path'] . "/docker-compose.yml") &&
+            !file_exists($local['path'] . "/docker-compose.yaml")
         ) {
             return false;
         }
 
-        return $identifier;
+        return $local;
     }
 }

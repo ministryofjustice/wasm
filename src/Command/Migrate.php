@@ -10,14 +10,13 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use WpEcs\Service\Migration;
-use WpEcs\Traits\Debug;
 use WpEcs\Traits\ProductionInteractionTrait;
 use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\InstanceFactory;
 
 class Migrate extends Command
 {
-    use ProductionInteractionTrait, Debug;
+    use ProductionInteractionTrait;
 
     protected $instanceFactory;
 
@@ -35,14 +34,13 @@ class Migrate extends Command
             ->addArgument(
                 'source',
                 InputArgument::REQUIRED,
-                'Source instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
+                'Source instance identifier. Valid format: "<appname>:<env>[:<site>]" or path to a local directory'
             )
             ->addArgument(
                 'destination',
                 InputArgument::REQUIRED,
-                'Destination instance identifier. Valid format: "<appname>:<env>" or path to a local directory'
+                'Destination instance identifier. Valid format: "<appname>:<env>[:<site>]" or path to a local directory'
             )
-            ->addArgument('url', InputArgument::OPTIONAL, 'Multisite URL mapping. Valid format: "<src-url>:<dest-url>"')
             ->addOption(
                 'production',
                 'p',
@@ -62,21 +60,15 @@ class Migrate extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        // multisite src/dest url
-        $url = [
-            'src' => '',
-            'dest' => ''
-        ];
-
         $source = $input->getArgument('source');
         $dest = $input->getArgument('destination');
-        $url['src'] = $input->getArgument('url-source');
-        $url['dest'] = $input->getArgument('url-dest');
+
+        $sourceInstance = $this->instanceFactory->create($source);
+        $destInstance = $this->instanceFactory->create($dest);
 
         $migration = $this->newMigration(
-            $this->instanceFactory->create($source),
-            $this->instanceFactory->create($dest),
-            $url,
+            $sourceInstance,
+            $destInstance,
             $output
         );
         $migration->migrate();
@@ -110,8 +102,8 @@ class Migrate extends Command
      *
      * @return Migration
      */
-    public function newMigration(AbstractInstance $source, AbstractInstance $destination, $url, OutputInterface $output)
+    public function newMigration(AbstractInstance $source, AbstractInstance $destination, OutputInterface $output)
     {
-        return new Migration($source, $destination, $url, $output);
+        return new Migration($source, $destination, $output);
     }
 }

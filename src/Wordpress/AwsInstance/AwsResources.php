@@ -2,7 +2,6 @@
 
 namespace WpEcs\Wordpress\AwsInstance;
 
-use Aws\CloudFormation\Exception\CloudFormationException;
 use Aws\Sdk;
 use Symfony\Component\Process\Process;
 use WpEcs\Traits\LazyPropertiesTrait;
@@ -20,7 +19,7 @@ use Exception;
  * @property-read string ec2Hostname
  * @property-read string dockerContainerId
  * @property-read string s3BucketName
- * @property-read bool   stackIsActive
+ * @property-read bool stackIsActive
  */
 class AwsResources
 {
@@ -35,8 +34,8 @@ class AwsResources
     public function __construct($appName, $env, Sdk $sdk)
     {
         $this->appName = $appName;
-        $this->env     = $env;
-        $this->sdk     = $sdk;
+        $this->env = $env;
+        $this->sdk = $sdk;
     }
 
     public function newProcess($command)
@@ -74,19 +73,17 @@ class AwsResources
 
         $containerInstance = $ecs->describeTasks([
             'cluster' => $this->ecsCluster,
-            'tasks'   => [$this->ecsTaskArn],
+            'tasks' => [$this->ecsTaskArn],
         ])['tasks'][0]['containerInstanceArn'];
 
         $ec2Instance = $ecs->describeContainerInstances([
-            'cluster'            => $this->ecsCluster,
+            'cluster' => $this->ecsCluster,
             'containerInstances' => [$containerInstance],
         ])['containerInstances'][0]['ec2InstanceId'];
 
-        $ec2Hostname = $ec2->describeInstances([
+        return $ec2->describeInstances([
             'InstanceIds' => [$ec2Instance]
         ])['Reservations'][0]['Instances'][0]['PublicDnsName'];
-
-        return $ec2Hostname;
     }
 
     protected function getEcsCluster()
@@ -108,7 +105,7 @@ class AwsResources
         $cloudformation = $this->sdk->createCloudFormation();
 
         $resource = $cloudformation->describeStackResource([
-            'StackName'         => $this->stackName,
+            'StackName' => $this->stackName,
             'LogicalResourceId' => 'WebService',
         ]);
 
@@ -121,13 +118,11 @@ class AwsResources
 
     protected function getEcsTaskArn()
     {
-        $ecs     = $this->sdk->createEcs();
-        $taskArn = $ecs->listTasks([
-            'cluster'     => $this->ecsCluster,
+        $ecs = $this->sdk->createEcs();
+        return $ecs->listTasks([
+            'cluster' => $this->ecsCluster,
             'serviceName' => $this->ecsServiceName
         ])['taskArns'][0];
-
-        return $taskArn;
     }
 
     protected function getS3BucketName()
@@ -135,7 +130,7 @@ class AwsResources
         $cloudformation = $this->sdk->createCloudFormation();
 
         $resource = $cloudformation->describeStackResource([
-            'StackName'         => $this->stackName,
+            'StackName' => $this->stackName,
             'LogicalResourceId' => 'Storage',
         ]);
 

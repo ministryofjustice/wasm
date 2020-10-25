@@ -19,12 +19,14 @@ class AwsInstance extends AbstractInstance
      *
      * @param string $appName The name of the site, as defined by the stack's `AppName` parameter
      * @param string $env The environment of the instance: dev|staging|prod
+     * @param string|null $url A sub-site identifier (target) within the instance
      * @param AwsResources $aws
      */
-    public function __construct($appName, $env, AwsResources $aws)
+    public function __construct($appName, $env, $url, AwsResources $aws)
     {
-        $this->Aws  = $aws;
+        $this->Aws = $aws;
         $this->name = "$appName-$env";
+        $this->url = $url;
     }
 
     protected function getUploadsBaseUrl()
@@ -43,7 +45,7 @@ class AwsInstance extends AbstractInstance
         if (count($options) > 0) {
             $sshOptions = $options[0];
         }
-        
+
         $command = $this->prepareCommand($command, $dockerOptions, $sshOptions);
         $process = new Process($command);
         $process->setTimeout(5400);
