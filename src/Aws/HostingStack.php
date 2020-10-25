@@ -4,10 +4,13 @@ namespace WpEcs\Aws;
 
 use Aws\CloudFormation\CloudFormationClient;
 use Exception;
+use WpEcs\Traits\Debug;
 use WpEcs\Wordpress\InstanceFactory;
 
 class HostingStack
 {
+    use Debug;
+
     /**
      * @var array
      */
@@ -59,7 +62,7 @@ class HostingStack
         $this->appName = $appAndEnv['app'];
         $this->env = $appAndEnv['env'];
         $this->family = $this->getFamily();
-        $this->sites = $this->getMSSites($this->appName, $this->env);
+        $this->sites = $this->getMSSites();
         $this->isActive = $this->isActive();
         $this->isUpdating = $this->isUpdating();
     }
@@ -89,15 +92,13 @@ class HostingStack
     }
 
     /**
-     * @param $app
-     * @param $env
      * @return string
      * @throws Exception
      */
-    protected function getMSSites($app, $env): string
+    protected function getMSSites(): string
     {
         if ($this->isMultisite()) {
-            $source = $this->instanceFactory->create($app . ':' . $env);
+            $source = $this->instanceFactory->create($this->appName . ':' . $this->env);
 
             $command = [
                 'wp',
