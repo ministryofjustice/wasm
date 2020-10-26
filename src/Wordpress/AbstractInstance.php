@@ -55,11 +55,11 @@ abstract class AbstractInstance
     /**
      * @var mixed
      */
-    public $blog_id;
+    public $blogId;
     /**
      * @var mixed
      */
-    private $url_is_domain;
+    private $urlIsDomain;
 
     /**
      * Get the value of an environment variable in the container
@@ -225,11 +225,9 @@ abstract class AbstractInstance
      * Multisite
      * Collects a list of sub-site tables
      * Uses urlFlag() to target a specific site
-     * @param bool $prefix
-     * @param string $format
      * @return string
      */
-    public function tablesFilter($prefix = true, $format = 'csv'): string
+    public function tablesFilter(): string
     {
         if (!$this->tables) {
             $command = [
@@ -239,13 +237,13 @@ abstract class AbstractInstance
                 '--scope=blog',
                 $this->urlFlag(),
                 '--allow-root',
-                '--format=' . $format,
+                '--format=csv',
             ];
 
             $this->tables = rtrim($this->execute($command));
         }
 
-        return ($prefix ? '--tables=' : '') . $this->tables;
+        return '--tables=' . $this->tables;
     }
 
     /**
@@ -262,11 +260,11 @@ abstract class AbstractInstance
      */
     protected function urlIsDomain()
     {
-        if ($this->url_is_domain === null) {
-            $this->url_is_domain = preg_match('/[^A-Za-z0-9-]/', $this->url) ? true : false;
+        if ($this->urlIsDomain === null) {
+            $this->urlIsDomain = preg_match('/[^A-Za-z0-9-]/', $this->url) ? true : false;
         }
 
-        return $this->url_is_domain;
+        return $this->urlIsDomain;
     }
 
     /**
@@ -274,18 +272,16 @@ abstract class AbstractInstance
      */
     public function getBlogId()
     {
-        if ($this->blog_id) {
-            return $this->blog_id;
+        if ($this->blogId) {
+            return $this->blogId;
         }
 
         $sites = json_decode($this->execute('wp --allow-root site list --fields=blog_id,url --format=json'));
-        if (is_array($sites)) {
-            foreach ($sites as $site) {
-                $testcase = ($this->urlIsDomain() ? $this->url : '/' . $this->url . '/');
-                if (strpos($site->url, $testcase) > -1) {
-                    $this->blog_id = $site->blog_id;
-                    return $site->blog_id;
-                }
+        foreach ($sites as $site) {
+            $testcase = ($this->urlIsDomain() ? $this->url : '/' . $this->url . '/');
+            if (strpos($site->url, $testcase) > -1) {
+                $this->blogId = $site->blog_id;
+                return $site->blog_id;
             }
         }
     }

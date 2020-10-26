@@ -275,10 +275,13 @@ class Migration
             // catch a null blog_id on dest
             if (!$this->dest->getBlogId()) {
                 // site will not import completely without being registered in the wp_blogs DB table
-                $this->output->writeln('Site (<info>' . $this->dest->url . '</info>) is missing.', OutputInterface::VERBOSITY_VERBOSE);
+                $this->output->writeln(
+                    'Site (<info>' . $this->dest->url . '</info>) is missing.',
+                    OutputInterface::VERBOSITY_VERBOSE
+                );
                 $this->output->writeln('Creating new site now....', OutputInterface::VERBOSITY_VERBOSE);
-                $this->dest->createSite($this->source->blog_id);
-                $this->dest->addSiteMeta($this->source->blog_id);
+                $this->dest->createSite($this->source->blogId);
+                $this->dest->addSiteMeta($this->source->blogId);
                 $this->output->writeln('<info>Done.</info>', OutputInterface::VERBOSITY_VERBOSE);
             }
         }

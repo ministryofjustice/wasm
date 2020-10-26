@@ -38,7 +38,7 @@ class InstanceFactory
 
         // Could not recognise this as a valid instance identifier
         $message = "Instance identifier \"$identifier\" is not valid\n";
-        $message .= 'Use the format "<appname>:<env>[:<site>]" (e.g. "sitename:dev" / sitename:dev:sub-site-url)' . "\n";
+        $message .= 'Use the format "<appname>:<env>[:<site>]" (e.g. "sitename:dev" / sitename:dev:sub-site)' . "\n";
         $message .= 'for an AWS instance, or the path to a local instance directory (this must contain a' . "\n";
         $message .= 'docker-compose.yml file).' . "\n\n";
         $message .= '"<site>" is an optional sub-site identifier used in Multisite for sub-site management.' . "\n";
