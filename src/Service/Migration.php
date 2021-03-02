@@ -6,11 +6,14 @@ use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
 use Symfony\Component\Process\Process;
+use WpEcs\Traits\Debug;
 use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\LocalInstance;
 
 class Migration
 {
+    use Debug;
+
     /**
      * The destination WordPress instance
      *
@@ -50,10 +53,7 @@ class Migration
     public function migrate()
     {
         $this->beginStep('[1/4] Checking compatibility...');
-        $this->source->detectNetwork();
-        $this->dest->detectNetwork();
-        $this->checkSiteExists();
-        $this->dbCompatibility();
+        $this->checkCompatibility();
         $this->endStep();
 
         $this->beginStep('[2/4] Moving database...');
@@ -75,7 +75,7 @@ class Migration
      *
      * @param string $name
      */
-    public function beginStep($name)
+    public function beginStep(string $name)
     {
         if ($this->output->getVerbosity() == OutputInterface::VERBOSITY_NORMAL) {
             $this->output->writeln($name);
@@ -88,6 +88,27 @@ class Migration
         $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
         $this->output->writeln('<comment>' . strtoupper($name) . '</comment>', OutputInterface::VERBOSITY_VERBOSE);
         $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
+    }
+
+    /**
+     * Helper method to output the end of a step
+     * This outputs a blank line to visually separate between steps
+     */
+    public function endStep()
+    {
+        $this->output->writeln('', OutputInterface::VERBOSITY_VERBOSE);
+    }
+
+    /**
+     * Perform a series of checks to ensure the migration process can run.
+     * Used as part of multisite integration
+     * @returns null
+     */
+    public function checkCompatibility()
+    {
+        $this->source->detectNetwork();
+        $this->dest->detectNetwork();
+        $this->dbCompatibility();
     }
 
     /**
@@ -109,15 +130,6 @@ class Migration
     }
 
     /**
-     * Helper method to output the end of a step
-     * This outputs a blank line to visually separate between steps
-     */
-    public function endStep()
-    {
-        $this->output->writeln('', OutputInterface::VERBOSITY_VERBOSE);
-    }
-
-    /**
      * Perform search & replace operations on the `destination` database
      * This step is necessary to rewrite the hostname and other content which references the `source` instance
      *
@@ -128,7 +140,11 @@ class Migration
     public function rewriteDatabase()
     {
         // Rewrite media upload URLs
-        $this->output->writeln('Rewriting references to media uploads base URL...', OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->writeln(
+            'Rewriting references to media uploads base URL...',
+            OutputInterface::VERBOSITY_VERBOSE
+        );
+
         $this->dbSearchReplace(
             $this->source->uploadsBaseUrl,
             $this->dest->uploadsBaseUrl
@@ -185,7 +201,7 @@ class Migration
         }
 
         $command[] = '--network';
-        $command[] = '--url=' . $this->dest->env('WP_HOME');
+        $command[] = '--url=' . $this->source->env('WP_HOME');
     }
 
     /**
@@ -216,7 +232,7 @@ class Migration
         $sourcePath = $this->source->uploadsPath;
         $destPath = $this->dest->uploadsPath;
 
-        if ($this->source->multisite) {
+        if ($this->source->multisite && $this->source->url !== null) {
             $sourceBlogId = $this->source->getBlogId();
             $sourcePath .= '/sites/' . $sourceBlogId;
             // dest site might not exist
@@ -256,7 +272,7 @@ class Migration
     public function dbCompatibility()
     {
         if ($this->source->multisite !== $this->dest->multisite) {
-            $this->output->writeln('DB Check has failed...', OutputInterface::VERBOSITY_VERBOSE);
+            $this->output->writeln('An incompatibility has been found.', OutputInterface::VERBOSITY_VERBOSE);
             throw new InvalidArgumentException(
                 '"source" and "destination" installations must match. One is Multisite, the other is not.'
             );
@@ -270,16 +286,16 @@ class Migration
     protected function checkSiteExists()
     {
         if ($this->dest->multisite) {
-            // try and resolve the blog_id's
+            // resolve the blog_id's
             $this->source->getBlogId();
             // catch a null blog_id on dest
             if (!$this->dest->getBlogId()) {
                 // site will not import completely without being registered in the wp_blogs DB table
                 $this->output->writeln(
-                    'Site (<info>' . $this->dest->url . '</info>) is missing.',
+                    'Site (<info>' . $this->dest->url . '</info>) is not present in the destination.',
                     OutputInterface::VERBOSITY_VERBOSE
                 );
-                $this->output->writeln('Creating new site now....', OutputInterface::VERBOSITY_VERBOSE);
+                $this->output->writeln('Creating <info>' . $this->dest->url . '</info> now...', OutputInterface::VERBOSITY_VERBOSE);
                 $this->dest->createSite($this->source->blogId);
                 $this->dest->addSiteMeta($this->source->blogId);
                 $this->output->writeln('<info>Done.</info>', OutputInterface::VERBOSITY_VERBOSE);

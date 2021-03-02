@@ -20,7 +20,7 @@ trait ProductionInteractionTrait
 
     /**
      * @var string
-     * The argument to test against. In most cases this is instance in the form of a string: <appname>:<env>
+     * The argument to test against. In most cases this instance is in the form of a string: <appname>:<env>
      */
     public $prodInteractArgument = "instance";
 
@@ -47,8 +47,14 @@ trait ProductionInteractionTrait
      *
      * @return string
      */
-    protected function getStackName($instance)
+    protected function getStackName(string $instance)
     {
-        return str_replace(':', '-', $instance);
+        $parts = explode(':', $instance);
+        //account for local .
+        if (!isset($parts[1])) {
+            return '';
+        }
+
+        return $parts[0] . '-' . $parts[1];
     }
 }

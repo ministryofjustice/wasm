@@ -71,6 +71,7 @@ class Migrate extends Command
             $destInstance,
             $output
         );
+
         $migration->migrate();
 
         $output->writeln("<info>Success:</info> Migrated <comment>$source</comment> to <comment>$dest</comment>");

@@ -17,7 +17,7 @@ class InstanceFactory
      * @return AbstractInstance
      * @throws Exception
      */
-    public function create($identifier)
+    public function create(string $identifier)
     {
         $local = $this->localIdentifier($identifier);
         if (isset($local['path'])) {

@@ -4,6 +4,7 @@ namespace WpEcs\Wordpress;
 
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
+use WpEcs\Traits\Debug;
 use WpEcs\Traits\LazyPropertiesTrait;
 
 /**
@@ -14,7 +15,7 @@ use WpEcs\Traits\LazyPropertiesTrait;
  */
 abstract class AbstractInstance
 {
-    use LazyPropertiesTrait;
+    use LazyPropertiesTrait, Debug;
 
     /**
      * Holds a cache of env variables
@@ -62,6 +63,11 @@ abstract class AbstractInstance
     private $urlIsDomain;
 
     /**
+     * @var bool|mixed
+     */
+    public $createdDb = false;
+
+    /**
      * Get the value of an environment variable in the container
      * Values are cached for the life of the object to avoid repeat calls to the container for env variables
      *
@@ -69,7 +75,7 @@ abstract class AbstractInstance
      *
      * @return string Value of the environment variable
      */
-    public function env($var)
+    public function env(string $var)
     {
         if (!isset($this->envCache[$var])) {
             $value = $this->execute("printenv $var");
@@ -116,16 +122,17 @@ abstract class AbstractInstance
     {
         $this->detectNetwork();
 
-        $command = 'wp --allow-root db export -';
+        $command = [
+            'wp',
+            '--allow-root',
+            'db',
+            'export',
+            '-',
+            $this->urlFlag(),
+            $this->tablesFilter()
+        ];
 
-        if ($this->multisite) {
-            $command .= ' ' . (!empty($this->url)
-                ? $this->tablesFilter()
-                : $this->urlFlag()
-            );
-        }
-
-        $process = $this->newCommand($command);
+        $process = $this->newCommand(array_filter($command));
 
         /**
          * Callback to process Process output
@@ -139,7 +146,7 @@ abstract class AbstractInstance
          * @param string $type
          * @param string $buffer
          */
-        $saveOutputStream = function ($type, $buffer) use ($file, $errorOut) {
+        $saveOutputStream = function (string $type, string $buffer) use ($file, $errorOut) {
             if ($type === Process::ERR) {
                 fwrite($errorOut, $buffer);
                 return;
@@ -190,6 +197,40 @@ abstract class AbstractInstance
             $this->multisite = true;
         } catch (ProcessFailedException $exception) {
             $this->multisite = false;
+
+            // Exception could have been thrown because of a missing local DB
+            // detect and maybe fix no DB locally
+            $this->localDatabaseInitMaybe();
+        }
+    }
+
+    /**
+     * Run a check on a local instance when importing a complete multisite database and
+     * install the DB using wp-config vars if it doesn't exist.
+     *
+     * $this->url will be null if a complete migration is taking place as the variable
+     * is only populated when a sub-site is being targeted.
+     */
+    protected function localDatabaseInitMaybe()
+    {
+        if ($this->url === null && $this instanceof LocalInstance) {
+            try {
+                $this->execute([
+                    'wp',
+                    'db',
+                    'query',
+                    '"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \'' . $this->env('DB_NAME') . '\';"',
+                    '--allow-root'
+                ]);
+            } catch (ProcessFailedException $exception) {
+                if (strpos($exception->getMessage(), 'Unknown database') > 0) {
+                    $this->multisite = true;
+                    // create the DB locally
+                    $this->execute('wp db create --allow-root');
+                    $this->createdDb = true;
+                    echo "The database named " . $this->env('DB_NAME') . " was created because it did not exist locally.\n";
+                }
+            }
         }
     }
 
@@ -212,6 +253,10 @@ abstract class AbstractInstance
      */
     public function urlFlag(): string
     {
+        if (!$this->multisite) {
+            return '';
+        }
+
         return '--url=' . ($this->urlIsDomain()
                 ? $this->url
                 : (!empty($this->url)
@@ -229,28 +274,35 @@ abstract class AbstractInstance
      */
     public function tablesFilter(): string
     {
-        if (!$this->tables) {
-            $command = [
-                'wp',
-                'db',
-                'tables',
-                '--scope=blog',
-                $this->urlFlag(),
-                '--allow-root',
-                '--format=csv',
-            ];
+        $tablesFlag = '';
 
-            $this->tables = rtrim($this->execute($command));
+        if ($this->multisite && $this->url !== null) {
+            if (!$this->tables) {
+                $command = [
+                    'wp',
+                    'db',
+                    'tables',
+                    '--scope=blog',
+                    $this->urlFlag(),
+                    '--allow-root',
+                    '--format=csv',
+                ];
+
+                $this->tables = rtrim($this->execute($command));
+            }
+
+            $tablesFlag = '--tables=' . $this->tables;
         }
 
-        return '--tables=' . $this->tables;
+        return $tablesFlag;
     }
 
     /**
-     * Tests the url property for any remaining characters, after stripping WP allowed sub-site characters.
+     * Tests the url property for any remaining characters, while negating WP allowed sub-site characters.
      * When preg_match is true, we can be certain we don't have a standard sub-site name, we have a custom domain.
      *
-     * Does not support localhost or host names without periods (.)
+     * Supports host names (mapped) with periods (.)
+     * Does not support localhost or host names without periods
      *
      * WP site naming convention, characters are limited to:
      * - alphanumerics
@@ -272,6 +324,10 @@ abstract class AbstractInstance
      */
     public function getBlogId()
     {
+        if ($this->createdDb) {
+            return null;
+        }
+
         if ($this->blogId) {
             return $this->blogId;
         }
@@ -297,13 +353,18 @@ abstract class AbstractInstance
             $path = '/';
         }
 
-        $columns = '`blog_id`, `site_id`, `domain`, `path`, `registered`, `last_updated`';
-        $values = "$sourceId, 1, '$domain', '$path', '$date', '$date'";
+        $columns = '`blog_id`,`site_id`,`domain`,`path`,`registered`,`last_updated`';
+        $values = $sourceId . ', 1, "' . $domain . '", "' . $path . '", "' . $date . '", "' . $date . '"';
 
-        $newSite = 'wp --allow-root db query "INSERT INTO wp_blogs (' . $columns . ') VALUES (' . $values . ')"';
+        $command = [
+            'wp',
+            'db',
+            'query',
+            '"INSERT INTO wp_blogs (' . $columns . ') VALUES (' . $values . ');"',
+            '--allow-root'
+        ];
 
-        $process = $this->newCommand($newSite);
-        $process->mustRun();
+        $this->execute($command);
     }
 
     public function addSiteMeta($sourceId)

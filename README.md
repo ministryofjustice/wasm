@@ -22,7 +22,7 @@ Ensure your machine is configured correctly to [meet the requirements](#requirem
 1. Add this GitHub repository as a package source for your global composer install:
 
    ```bash
-   composer global config repositories.repo-name vcs https://github.com/ministryofjustice/wasm
+   composer global config repositories.wasm vcs https://github.com/ministryofjustice/wasm
    ```
 2. Choose one
 

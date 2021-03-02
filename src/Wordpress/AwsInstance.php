@@ -22,7 +22,7 @@ class AwsInstance extends AbstractInstance
      * @param string|null $url A sub-site identifier (target) within the instance
      * @param AwsResources $aws
      */
-    public function __construct($appName, $env, $url, AwsResources $aws)
+    public function __construct(string $appName, string $env, ?string $url, AwsResources $aws)
     {
         $this->Aws = $aws;
         $this->name = "$appName-$env";
@@ -57,7 +57,7 @@ class AwsInstance extends AbstractInstance
      * Generate a `ssh` + `docker exec` command array suitable for using with Symfony's Process component.
      * Optionally, you can specify arguments to pass to both the `ssh` and `docker exec` commands.
      *
-     * @param string $command Command to execute on the container
+     * @param string|array $command Command to execute on the container
      * @param array $dockerOptions Arguments to pass to the `docker exec` command (optional)
      * @param array $sshOptions Arguments to pass to the `ssh` command (optional)
      *
