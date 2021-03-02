@@ -213,23 +213,28 @@ abstract class AbstractInstance
      */
     protected function localDatabaseInitMaybe()
     {
-        if ($this->url === null && $this instanceof LocalInstance) {
-            try {
-                $this->execute([
-                    'wp',
-                    'db',
-                    'query',
-                    '"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \'' . $this->env('DB_NAME') . '\';"',
-                    '--allow-root'
-                ]);
-            } catch (ProcessFailedException $exception) {
-                if (strpos($exception->getMessage(), 'Unknown database') > 0) {
-                    $this->multisite = true;
-                    // create the DB locally
-                    $this->execute('wp db create --allow-root');
-                    $this->createdDb = true;
-                    echo "The database named " . $this->env('DB_NAME') . " was created because it did not exist locally.\n";
-                }
+        if ($this->url !== null) {
+            return null;
+        }
+
+        $dbName = $this->env('DB_NAME');
+
+        try {
+            $this->execute([
+                'wp',
+                'db',
+                'query',
+                '"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \'' . $dbName . '\';"',
+                '--allow-root'
+            ]);
+        } catch (ProcessFailedException $exception) {
+            if ($this instanceof LocalInstance && strpos($exception->getMessage(), 'Unknown database') > 0) {
+                $this->multisite = true;
+
+                // create the DB locally
+                $this->execute('wp db create --allow-root');
+                $this->createdDb = true;
+                echo "The database named " . $dbName . " was created because it did not exist locally.\n";
             }
         }
     }
@@ -272,7 +277,7 @@ abstract class AbstractInstance
      * Uses urlFlag() to target a specific site
      * @return string
      */
-    public function tablesFilter(): string
+    private function tablesFilter(): string
     {
         $tablesFlag = '';
 

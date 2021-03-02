@@ -167,7 +167,7 @@ class Migration
      * @param string $search
      * @param string $replace
      */
-    public function dbSearchReplace($search, $replace)
+    public function dbSearchReplace(string $search, string $replace)
     {
         $command = [
             'wp',
@@ -181,7 +181,13 @@ class Migration
         ];
 
         if ($this->source->multisite) {
-            $this->multisiteSearchFilter($command);
+            if (!empty($this->source->url)) {
+                $command[] = $this->dest->urlFlag();
+                return;
+            }
+
+            $command[] = '--network';
+            $command[] = '--url=' . $this->source->env('WP_HOME');
         }
 
         $this->output->writeln(
@@ -191,17 +197,6 @@ class Migration
 
         $result = $this->dest->execute($command);
         $this->output->writeln($result, OutputInterface::VERBOSITY_VERBOSE);
-    }
-
-    protected function multisiteSearchFilter(&$command)
-    {
-        if (!empty($this->source->url)) {
-            $command[] = $this->dest->urlFlag();
-            return;
-        }
-
-        $command[] = '--network';
-        $command[] = '--url=' . $this->source->env('WP_HOME');
     }
 
     /**
@@ -214,7 +209,7 @@ class Migration
      *
      * @param string $var
      */
-    protected function rewriteEnvVar($var)
+    protected function rewriteEnvVar(string $var)
     {
         $this->dbSearchReplace(
             $this->source->env($var),
@@ -269,7 +264,7 @@ class Migration
         return $process;
     }
 
-    public function dbCompatibility()
+    protected function dbCompatibility()
     {
         if ($this->source->multisite !== $this->dest->multisite) {
             $this->output->writeln('An incompatibility has been found.', OutputInterface::VERBOSITY_VERBOSE);
@@ -295,7 +290,10 @@ class Migration
                     'Site (<info>' . $this->dest->url . '</info>) is not present in the destination.',
                     OutputInterface::VERBOSITY_VERBOSE
                 );
-                $this->output->writeln('Creating <info>' . $this->dest->url . '</info> now...', OutputInterface::VERBOSITY_VERBOSE);
+                $this->output->writeln(
+                    'Creating <info>' . $this->dest->url . '</info> now...',
+                    OutputInterface::VERBOSITY_VERBOSE
+                );
                 $this->dest->createSite($this->source->blogId);
                 $this->dest->addSiteMeta($this->source->blogId);
                 $this->output->writeln('<info>Done.</info>', OutputInterface::VERBOSITY_VERBOSE);
