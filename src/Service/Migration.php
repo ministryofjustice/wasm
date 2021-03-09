@@ -6,14 +6,11 @@ use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Terminal;
 use Symfony\Component\Process\Process;
-use WpEcs\Traits\Debug;
 use WpEcs\Wordpress\AbstractInstance;
 use WpEcs\Wordpress\LocalInstance;
 
 class Migration
 {
-    use Debug;
-
     /**
      * The destination WordPress instance
      *
@@ -183,11 +180,10 @@ class Migration
         if ($this->source->multisite) {
             if (!empty($this->source->url)) {
                 $command[] = $this->dest->urlFlag();
-                return;
+            } else {
+                $command[] = '--network';
+                $command[] = '--url=' . $this->source->env('WP_HOME');
             }
-
-            $command[] = '--network';
-            $command[] = '--url=' . $this->source->env('WP_HOME');
         }
 
         $this->output->writeln(
@@ -261,6 +257,7 @@ class Migration
     {
         $process = new Process($command);
         $process->setTimeout(5400); // 90 minutes for large buckets
+
         return $process;
     }
 
