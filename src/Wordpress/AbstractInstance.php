@@ -58,6 +58,10 @@ abstract class AbstractInstance
      */
     public $blogId;
     /**
+     * @var string
+     */
+    public $dbPrefix;
+    /**
      * @var mixed
      */
     private $urlIsDomain;
@@ -132,7 +136,7 @@ abstract class AbstractInstance
             $this->tablesFilter()
         ];
 
-        $process = $this->newCommand(array_filter($command));
+        $process = $this->newCommand(implode(' ', array_filter($command)));
 
         /**
          * Callback to process Process output
@@ -170,13 +174,16 @@ abstract class AbstractInstance
     {
         $this->detectNetwork();
 
-        $command = 'wp --allow-root db import -';
+        $command = [
+            'wp',
+            '--allow-root',
+            'db',
+            'import',
+            '-',
+            $this->urlFlag()
+        ];
 
-        if ($this->multisite) {
-            $command .= ' ' . $this->urlFlag();
-        }
-
-        $process = $this->newCommand($command, ['-i']);
+        $process = $this->newCommand(implode(' ', array_filter($command)), ['-i']);
         $process->setInput($file);
         $process->setTimeout(900); // 15 minutes for large db's
         $process->mustRun();
@@ -287,8 +294,8 @@ abstract class AbstractInstance
                     'wp',
                     'db',
                     'tables',
-                    '--scope=blog',
-                    $this->urlFlag(),
+                    $this->getDbPrefix() . $this->getBlogId() . '*',
+                    '--all-tables',
                     '--allow-root',
                     '--format=csv',
                 ];
@@ -392,5 +399,19 @@ abstract class AbstractInstance
                 return trim(strstr($version, ':'), ': ');
             }
         }
+    }
+
+    public function setDbPrefix()
+    {
+        $this->dbPrefix = trim($this->execute('wp db prefix --allow-root'));
+    }
+
+    public function getDbPrefix()
+    {
+        if ($this->dbPrefix !== null) {
+            return $this->dbPrefix;
+        }
+
+        $this->setDbPrefix();
     }
 }

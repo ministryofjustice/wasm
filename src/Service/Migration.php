@@ -103,6 +103,7 @@ class Migration
      */
     public function checkCompatibility()
     {
+        // network detection
         $this->source->detectNetwork();
         $this->dest->detectNetwork();
         $this->dbCompatibility();
@@ -152,7 +153,7 @@ class Migration
         $this->output->writeln('Rewriting references to site URL...', OutputInterface::VERBOSITY_VERBOSE);
         $this->rewriteEnvVar('WP_HOME');
 
-        // Rewrite 'example.com' to 'newdomain.com'
+        // Rewrite 'example.com' to 'new-domain.com'
         // This rewrites any other references to the domain name which didn't match WP_HOME above
         $this->output->writeln('Rewriting references to server name...', OutputInterface::VERBOSITY_VERBOSE);
         $this->rewriteEnvVar('SERVER_NAME');
@@ -201,7 +202,7 @@ class Migration
      *
      * e.g. $this->rewriteEnvVar('SERVER_NAME')
      *      might perform a database search & replace for
-     *      'example.com' => 'newhostname.com'
+     *      'example.com' => 'new-hostname.com'
      *
      * @param string $var
      */
