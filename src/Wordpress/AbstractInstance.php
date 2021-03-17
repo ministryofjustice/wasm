@@ -413,5 +413,6 @@ abstract class AbstractInstance
         }
 
         $this->setDbPrefix();
+        return $this->dbPrefix;
     }
 }
