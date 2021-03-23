@@ -11,7 +11,7 @@ class LocalInstanceTest extends TestCase
 {
     public function testName()
     {
-        $instance = new LocalInstance('/path/to/local-instance');
+        $instance = new LocalInstance('/path/to/local-instance', '/my-sub-site');
         $this->assertEquals('local-instance', $instance->name);
     }
 
@@ -66,7 +66,7 @@ class LocalInstanceTest extends TestCase
 
     public function testUploadsPath()
     {
-        $instance = new LocalInstance('/path/to/local-instance');
+        $instance = new LocalInstance('/path/to/local-instance', null);
         $expected = '/path/to/local-instance/web/app/uploads';
         $this->assertEquals($expected, $instance->uploadsPath);
     }
@@ -153,7 +153,7 @@ class LocalInstanceTest extends TestCase
         $workingDirectory = "{$vfs->url()}/path/to/local-instance";
 
         $instance = $this->getMockBuilder(LocalInstance::class)
-                         ->setConstructorArgs([$workingDirectory])
+                         ->setConstructorArgs([$workingDirectory, null])
                          ->setMethods(['getDockerContainerId'])
                          ->getMock();
 

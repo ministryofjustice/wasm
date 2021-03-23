@@ -28,6 +28,7 @@ class HostingStackCollectionTest extends TestCase
             [
                 'appName' => 'example',
                 'env' => 'dev',
+                'sites' => '',
                 'isActive' => true,
                 'isUpdating' => false,
                 'family' => 'WordPress',
@@ -35,6 +36,7 @@ class HostingStackCollectionTest extends TestCase
             [
                 'appName' => 'example',
                 'env' => 'staging',
+                'sites' => '',
                 'isActive' => true,
                 'isUpdating' => false,
                 'family' => 'WordPress',
@@ -263,7 +265,7 @@ class HostingStackCollectionTest extends TestCase
 
     protected function mockCloudFormationClient()
     {
-        $mockStackDescriptions = array_merge(
+        $descriptions = array_merge(
             $this->validHostingStackDescriptions(),
             $this->invalidHostingStackDescriptions()
         );
@@ -272,9 +274,9 @@ class HostingStackCollectionTest extends TestCase
         $mock->expects($this->once())
             ->method('getPaginator')
             ->with('DescribeStacks')
-            ->willReturnCallback(function () use ($mockStackDescriptions) {
-                shuffle($mockStackDescriptions);
-                $chunked = array_chunk($mockStackDescriptions, 2);
+            ->willReturnCallback(function () use ($descriptions) {
+                shuffle($descriptions);
+                $chunked = array_chunk($descriptions, 2);
                 return array_map(function ($chunk) {
                     return ['Stacks' => $chunk];
                 }, $chunked);

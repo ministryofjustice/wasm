@@ -25,7 +25,7 @@ class AwsInstanceTest extends TestCase
         $aws->dockerContainerId = 'c8a7b8';
         $aws->s3BucketName = 'example-dev-bucket';
 
-        $this->instance = new AwsInstance('example', 'dev', $aws);
+        $this->instance = new AwsInstance('example', 'dev', '/my-sub-site', $aws);
     }
 
     public function testUploadsPathProperty()

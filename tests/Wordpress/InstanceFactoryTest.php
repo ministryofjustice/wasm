@@ -66,9 +66,9 @@ class InstanceFactoryTest extends TestCase
     /**
      * @dataProvider localFilenameProvider
      * @param string $filename
-     * @throws \Exception
+     * @throws Exception
      */
-    public function testCreateWithLocalIdentifier($filename)
+    public function testCreateWithLocalIdentifier(string $filename)
     {
         $structure = [$filename => ''];
         $vfs = vfsStream::setup('root', null, $structure);

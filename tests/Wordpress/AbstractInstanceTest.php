@@ -1,5 +1,4 @@
 <?php
-
 namespace WpEcs\Tests\Wordpress;
 
 use PHPUnit\Framework\TestCase;
@@ -60,13 +59,13 @@ class AbstractInstanceTest extends TestCase
             ->method('setInput')
             ->with($fileHandle)
             ->willReturnSelf();
+
         $process->expects($this->at(1))
             ->method('mustRun')
             ->willReturnSelf();
 
-        $instance = $this->newInstance(['newCommand']);
-        $instance->expects($this->atLeastOnce())
-            ->method('detectNetwork');
+        $instance = $this->newInstance(['detectNetwork', 'newCommand']);
+
         $instance->expects($this->atLeastOnce())
             ->method('newCommand')
             ->with('wp --allow-root db import -', ['-i'])
@@ -87,9 +86,7 @@ class AbstractInstanceTest extends TestCase
         $errorMessage = 'An example error message sent to stderr';
 
         $process = $this->createMock(Process::class);
-        $process->expects($this->atLeastOnce())
-            ->method('disableOutput')
-            ->willReturnSelf();
+
         $process->expects($this->atLeastOnce())
             ->method('mustRun')
             ->with($this->callback('is_callable'))
@@ -104,15 +101,18 @@ class AbstractInstanceTest extends TestCase
                 }
             });
 
-        $instance = $this->newInstance(['newCommand']);
-        $instance->expects($this->atLeastOnce())
-            ->method('detectNetwork');
+        //$instance = $this->newInstance(['detectNetwork', 'newCommand', 'getBlogId']);
+        $instance = $this->getMockBuilder(AbstractInstance::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['detectNetwork', 'newCommand'])
+            ->getMockForAbstractClass();
+
         $instance->expects($this->atLeastOnce())
             ->method('newCommand')
             ->with('wp --allow-root db export -')
             ->willReturn($process);
 
-        $instance->exportDatabase($fileHandle, null, $err);
+        $instance->exportDatabase($fileHandle, $err);
 
         fclose($fileHandle);
         fclose($err);
@@ -143,12 +143,5 @@ class AbstractInstanceTest extends TestCase
             true,
             $mockMethods
         );
-    }
-
-    public function testDetectNetwork()
-    {
-        $source = $this->newInstance();
-        $source->expects($this->once())
-            ->method('execute');
     }
 }

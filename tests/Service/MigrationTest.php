@@ -27,10 +27,17 @@ class MigrationTest extends TestCase
 
     public function testMigrate()
     {
-        $migration = $this->createMock(Migration::class);
+        $migration = $this->createPartialMock(Migration::class, [
+            'beginStep',
+            'endStep',
+            'checkCompatibility',
+            'moveDatabase',
+            'rewriteDatabase',
+            'syncUploads',
+        ]);
 
         $migration->expects($this->at(0))->method('beginStep')->with($this->stringContains('Checking compatibility'));
-        $migration->expects($this->at(1))->method('detectNetwork');
+        $migration->expects($this->at(1))->method('checkCompatibility');
         $migration->expects($this->at(2))->method('endStep');
 
         $migration->expects($this->at(3))->method('beginStep')->with($this->stringContains('Moving database'));
@@ -136,7 +143,7 @@ class MigrationTest extends TestCase
 
         $migration = $this->getMockBuilder(Migration::class)
             ->setConstructorArgs([$source, $dest, $this->output])
-            ->addMethods(['dbSearchReplace'])
+            ->setMethods(['dbSearchReplace'])
             ->getMock();
 
         // Search & replace terms become less specific with each consecutive call
@@ -193,9 +200,8 @@ class MigrationTest extends TestCase
      * @dataProvider syncUploadsDataProvider
      * @param array $sourceArgs
      * @param array $destArgs
-     * @throws ReflectionException
      */
-    public function testSyncUploads($sourceArgs, $destArgs)
+    public function testSyncUploads(array $sourceArgs, array $destArgs)
     {
         $source = $this->mockInstance($sourceArgs[0]);
         $source->uploadsPath = $sourceArgs[1];
@@ -253,7 +259,7 @@ class MigrationTest extends TestCase
 
         $migration = $this->getMockBuilder(Migration::class)
             ->setConstructorArgs([$source, $dest, $this->output])
-            ->onlyMethods(['newProcess'])
+            ->setMethods(['newProcess', 'getBlogId'])
             ->getMock();
 
         $migration->expects($this->once())
@@ -262,6 +268,7 @@ class MigrationTest extends TestCase
             ->willReturn($process);
 
         $migration->syncUploads();
+
     }
 
     public function testNewProcess()
@@ -343,7 +350,7 @@ class MigrationTest extends TestCase
                 'execute',
                 'exportDatabase',
                 'importDatabase',
-                'detectNetwork'
+                'syncUploads'
             ]
         );
     }

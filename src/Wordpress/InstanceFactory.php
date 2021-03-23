@@ -77,12 +77,14 @@ class InstanceFactory
      *
      * @return false|array
      */
-    protected function localIdentifier($identifier)
+    protected function localIdentifier(string $identifier)
     {
         $local['path'] = $identifier;
+        $local['url'] = null;
+
         if (preg_match('/^(\.):?([.a-z0-9-]+)?$/', $identifier, $matches)) {
             $local['path'] = $matches[1];
-            $local['url'] = $matches[2] ?? null;
+            $local['url'] = $matches[2];
         }
 
         // $identifier must be a directory

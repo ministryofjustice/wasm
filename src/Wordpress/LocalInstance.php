@@ -27,10 +27,10 @@ class LocalInstance extends AbstractInstance
      * @param string $workingDirectory Path to the instance directory (can be relative)
      * @param $url
      */
-    public function __construct($workingDirectory, $url)
+    public function __construct(string $workingDirectory, $url)
     {
         $this->workingDirectory = $workingDirectory;
-        $this->name             = basename($workingDirectory);
+        $this->name = basename($workingDirectory);
         $this->url = $url;
     }
 

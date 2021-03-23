@@ -106,6 +106,7 @@ class Migration
         // network detection
         $this->source->detectNetwork();
         $this->dest->detectNetwork();
+        // database match
         $this->dbCompatibility();
     }
 
