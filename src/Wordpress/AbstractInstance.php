@@ -4,7 +4,6 @@ namespace WpEcs\Wordpress;
 
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
-use WpEcs\Traits\Debug;
 use WpEcs\Traits\LazyPropertiesTrait;
 
 /**
@@ -15,7 +14,7 @@ use WpEcs\Traits\LazyPropertiesTrait;
  */
 abstract class AbstractInstance
 {
-    use LazyPropertiesTrait, Debug;
+    use LazyPropertiesTrait;
 
     /**
      * Holds a cache of env variables
@@ -61,15 +60,32 @@ abstract class AbstractInstance
      * @var string
      */
     public $dbPrefix;
-    /**
-     * @var mixed
-     */
-    private $urlIsDomain;
 
     /**
      * @var bool|mixed
      */
     public $createdDb = false;
+
+    /**
+     * @var mixed|null
+     */
+    private $hasCustomDomain = null;
+
+    /**
+     * @var array|null
+     */
+    private $msBlogList = null;
+
+    /**
+     * Used if a migration is performed and the
+     * target is a production instance. It is
+     * intended to backup the moj_sub_site_urls
+     * network meta value before a DB is imported
+     *
+     * @var mixed|array
+     */
+    public $mojSubSiteUrls = null;
+
 
     /**
      * Get the value of an environment variable in the container
@@ -202,6 +218,7 @@ abstract class AbstractInstance
         try {
             $this->execute('wp --allow-root core is-installed --network');
             $this->multisite = true;
+            $this->maybeHasCustomDomain();
         } catch (ProcessFailedException $exception) {
             $this->multisite = false;
 
@@ -269,13 +286,18 @@ abstract class AbstractInstance
             return '';
         }
 
-        return '--url=' . ($this->urlIsDomain()
-                ? $this->url
-                : (!empty($this->url)
-                    ? $this->env('SERVER_NAME') . '/' . $this->url
-                    : $this->env('SERVER_NAME')
-                )
-            );
+        return '--url=' . $this->url();
+    }
+
+    public function url()
+    {
+        return rtrim(($this->urlIsDomain()
+            ? $this->url
+            : (!empty($this->url)
+                ? $this->env('WP_HOME') . '/' . $this->url
+                : $this->env('WP_HOME')
+            )
+        ), "/\n");
     }
 
     /**
@@ -324,11 +346,7 @@ abstract class AbstractInstance
      */
     protected function urlIsDomain()
     {
-        if ($this->urlIsDomain === null) {
-            $this->urlIsDomain = preg_match('/[^A-Za-z0-9-]/', $this->url) ? true : false;
-        }
-
-        return $this->urlIsDomain;
+        return preg_match('/[^A-Za-z0-9-]/', $this->url) ? true : false;
     }
 
     /**
@@ -340,11 +358,12 @@ abstract class AbstractInstance
             return null;
         }
 
-        if ($this->blogId) {
+        if (!empty($this->blogId)) {
             return $this->blogId;
         }
 
-        $sites = json_decode($this->execute('wp --allow-root site list --fields=blog_id,url --format=json'));
+
+        $sites = $this->getBlogList();
         foreach ($sites as $site) {
             $testcase = ($this->urlIsDomain() ? $this->url : '/' . $this->url . '/');
             if (strpos($site->url, $testcase) > -1) {
@@ -414,5 +433,91 @@ abstract class AbstractInstance
 
         $this->setDbPrefix();
         return $this->dbPrefix;
+    }
+
+    /**
+     * Singular - finds a custom domain using a site-uri
+     *
+     * @return string|false|null
+     */
+    public function maybeHasCustomDomain()
+    {
+        if ($this->isProd() && $this->hasCustomDomain === null && !empty($this->url) && !$this->urlIsDomain()) {
+            $siteUri = $this->url;
+
+            $command = [
+                'wp',
+                '--allow-root',
+                'network',
+                'meta',
+                'pluck',
+                '1',
+                'moj_sub_site_urls',
+                $siteUri
+            ];
+
+            try {
+                $this->url = rtrim($this->execute($command), "\n");
+                $this->hasCustomDomain = $this->url;
+            } catch (ProcessFailedException $error) {
+                $this->url = $siteUri;
+                $this->hasCustomDomain = false;
+            }
+        }
+
+        return $this->hasCustomDomain;
+    }
+
+    /**
+     * Get all available network custom domains and sub-site keys
+     *
+     * @return array|false|null
+     */
+    public function getSubSiteUrls()
+    {
+        if ($this->mojSubSiteUrls === null) {
+            $command = [
+                'wp',
+                '--allow-root',
+                'network',
+                'meta',
+                'get',
+                '1',
+                'moj_sub_site_urls',
+                '--format=json'
+            ];
+
+            try {
+                $this->mojSubSiteUrls = json_decode($this->execute($command));
+            } catch (ProcessFailedException $error) {
+                $this->mojSubSiteUrls = false;
+            }
+        }
+
+        return $this->mojSubSiteUrls;
+    }
+
+    public function isProd()
+    {
+        return (strpos($this->name, 'prod') > -1);
+    }
+
+    /**
+     * Produces an array of blog_id's and urls
+     * @return array|mixed|null
+     */
+    public function getBlogList()
+    {
+        if (!$this->multisite) {
+            return null;
+        }
+
+        if ($this->msBlogList === null) {
+            $this->msBlogList = json_decode(
+                $this->execute('wp --allow-root site list --fields=blog_id,url --format=json')
+            );
+        }
+
+        return $this->msBlogList;
     }
 }
