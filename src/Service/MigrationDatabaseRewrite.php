@@ -67,7 +67,7 @@ class MigrationDatabaseRewrite
         $this->output->writeln('Rewriting references to server name...', OutputInterface::VERBOSITY_VERBOSE);
         $this->rewriteEnvVar('SERVER_NAME');
 
-        $this->output->writeln('<info>Rewriting references to multisite...</info>', OutputInterface::VERBOSITY_VERBOSE);
+        $this->output->writeln('<info>M U L T I S I T E : Rewriting DB references...</info>', OutputInterface::VERBOSITY_VERBOSE);
         // M U L T I S I T E --> SINGLE site migrations...
         $this->multisiteSingle();
 
