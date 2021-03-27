@@ -82,14 +82,17 @@ class MigrationDatabaseRewrite
             $separator = str_repeat('-', $terminalWidth);
             $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
             $this->output->writeln('|--> <info>MULTISITE</info>', OutputInterface::VERBOSITY_VERBOSE);
+            $this->output->writeln($separator . "\n", OutputInterface::VERBOSITY_VERBOSE);
 
             $sitesList = $this->source->getBlogList();
             $customURLs = $this->source->getSubSiteUrls();
 
-            foreach ($sitesList as $site) {
+            foreach ($sitesList as $key => $site) {
                 foreach ($customURLs as $subSite => $customURL) {
                     if ($site->url === $customURL && !$this->dest->isProd()) {
-                        $this->output->writeln($separator . "\n", OutputInterface::VERBOSITY_VERBOSE);
+                        if ($key > 0) {
+                            $this->output->writeln($separator . "\n", OutputInterface::VERBOSITY_VERBOSE);
+                        }
 
                         $localDomain = $this->dest->env('WP_HOME');
                         $site->url = rtrim($site->url, '/');
