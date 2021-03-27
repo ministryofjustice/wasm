@@ -84,7 +84,7 @@ class InstanceFactory
 
         if (preg_match('/^(\.):?([.a-z0-9-]+)?$/', $identifier, $matches)) {
             $local['path'] = $matches[1];
-            $local['url'] = $matches[2];
+            $local['url'] = $matches[2] ?? null;
         }
 
         // $identifier must be a directory
