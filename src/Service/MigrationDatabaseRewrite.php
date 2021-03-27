@@ -67,7 +67,6 @@ class MigrationDatabaseRewrite
         $this->output->writeln('Rewriting references to server name...', OutputInterface::VERBOSITY_VERBOSE);
         $this->rewriteEnvVar('SERVER_NAME');
 
-        $this->output->writeln('|--> <info>MULTISITE : Rewriting DB references...</info>', OutputInterface::VERBOSITY_VERBOSE);
         // M U L T I S I T E --> SINGLE site migrations...
         $this->multisiteSingle();
 
@@ -78,14 +77,18 @@ class MigrationDatabaseRewrite
     protected function multisiteComplete()
     {
         if ($this->source->multisite && $this->source->url === null) {
+            // heading
+            $terminalWidth = (new Terminal())->getWidth();
+            $separator = str_repeat('-', $terminalWidth);
+            $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
+            $this->output->writeln('|--> <info>MULTISITE</info>', OutputInterface::VERBOSITY_VERBOSE);
+
             $sitesList = $this->source->getBlogList();
             $customURLs = $this->source->getSubSiteUrls();
 
             foreach ($sitesList as $site) {
                 foreach ($customURLs as $subSite => $customURL) {
                     if ($site->url === $customURL && !$this->dest->isProd()) {
-                        $terminalWidth = (new Terminal())->getWidth();
-                        $separator = str_repeat('-', ($terminalWidth / 2));
                         $this->output->writeln($separator . "\n", OutputInterface::VERBOSITY_VERBOSE);
 
                         $localDomain = $this->dest->env('WP_HOME');
@@ -120,8 +123,11 @@ class MigrationDatabaseRewrite
     protected function multisiteSingle()
     {
         if ($this->source->multisite && !empty($this->source->url)) {
+            // heading
             $terminalWidth = (new Terminal())->getWidth();
-            $separator = str_repeat('-', ($terminalWidth / 2));
+            $separator = str_repeat('-', $terminalWidth);
+            $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
+            $this->output->writeln('|--> <info>MULTISITE</info>', OutputInterface::VERBOSITY_VERBOSE);
             $this->output->writeln($separator . "\n", OutputInterface::VERBOSITY_VERBOSE);
 
             $sourceURL = rtrim($this->source->url(), '/');
