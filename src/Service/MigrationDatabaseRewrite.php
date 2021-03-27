@@ -87,10 +87,11 @@ class MigrationDatabaseRewrite
             $sitesList = $this->source->getBlogList();
             $customURLs = $this->source->getSubSiteUrls();
 
-            foreach ($sitesList as $key => $site) {
+            $count = 0;
+            foreach ($sitesList as $site) {
                 foreach ($customURLs as $subSite => $customURL) {
                     if ($site->url === $customURL && !$this->dest->isProd()) {
-                        if ($key > 0) {
+                        if ($count > 0) {
                             $this->output->writeln($separator . "\n", OutputInterface::VERBOSITY_VERBOSE);
                         }
 
@@ -113,6 +114,7 @@ class MigrationDatabaseRewrite
                         $this->options($localDomain . '/' . $subSite, 'home', $site->blog_id);
                         $this->options($localDomain . '/' . $subSite, 'siteurl', $site->blog_id);
                         $this->output->writeln('', OutputInterface::VERBOSITY_VERBOSE);
+                        $count++;
                     }
                 }
             }
