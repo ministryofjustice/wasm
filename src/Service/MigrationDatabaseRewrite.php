@@ -100,7 +100,7 @@ class MigrationDatabaseRewrite
 
                         $this->dbSearchReplace(
                             $site->url,
-                            $localDomain,
+                            $localDomain . '/' . $subSite,
                             true
                         );
 
