@@ -81,7 +81,7 @@ class MigrationDatabaseRewrite
             $terminalWidth = (new Terminal())->getWidth();
             $separator = str_repeat('-', $terminalWidth);
             $this->output->writeln($separator, OutputInterface::VERBOSITY_VERBOSE);
-            $this->output->writeln('|--> <info>MULTISITE</info>', OutputInterface::VERBOSITY_VERBOSE);
+            $this->output->writeln(' --> <info>MULTISITE</info>', OutputInterface::VERBOSITY_VERBOSE);
             $this->output->writeln($separator . "\n", OutputInterface::VERBOSITY_VERBOSE);
 
             $sitesList = $this->source->getBlogList();
