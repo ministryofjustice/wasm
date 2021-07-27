@@ -138,6 +138,9 @@ Tests are automatically run against Pull Requests in this repository:
 
 PRs cannot be merged unless they pass these tests.
 
+### Multisite docs
+See [Multisite migration docs](https://docs.google.com/document/d/1WcXzMe9qBnS4EGt4Z4CvHHOz-8_YuEoEyP_jXPElNo0/edit#)
+
 ### Local Development
 
 Run tests against this repository locally with:
