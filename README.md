@@ -71,6 +71,13 @@ wasm shell sitename:prod
 ```
 After running this, you'll then be able to use the [WP-CLI](https://developer.wordpress.org/cli/commands/) commands to do things like create accounts.
 
+### Multisite commands
+Shell into container
+`wasm shell jotwpublic:staging:magistrates`
+
+Migrate site
+`wasm migrate jotwpublic:prod:magistrates.judiciary.uk jotwpublic:staging:magistrates`
+
 ### AWS Commands
 Start an AWS hosting stack
 ```bash
